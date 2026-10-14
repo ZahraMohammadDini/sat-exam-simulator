@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bb-bg: #f7f7f8;
+  --bb-surface: #ffffff;
+  --bb-border: #d8dade;
+  --bb-text: #1a1a1a;
+  --bb-muted: #5b5f66;
+  --bb-accent: #0b5fff;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bb-bg);
+  color: var(--bb-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* KaTeX baseline fixes */
+.katex {
+  font-size: 1.02em;
+}
+
+/* Copy-prevention targets (best-effort) */
+.question-stem,
+.choice-text,
+.passage-text {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Exam surface scoped no-select — override for admin editable fields */
+.no-select {
+  user-select: none;
+}
+
+/* Custom highlight mark */
+mark.bb-highlight {
+  background: #fef08a;
+  padding: 0;
+  border-radius: 2px;
+}
+
+/* Scrollbar styling for exam panes */
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: #c9ccd1;
+  border-radius: 4px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
