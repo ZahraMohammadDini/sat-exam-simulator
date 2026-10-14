@@ -18,11 +18,11 @@ export async function compressImage(file: File): Promise<File> {
   // Skip compression for GIFs (loses animation) and SVGs
   if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
 
-  const bitmap = await loadBitmap(file);
-  const { width, height } = fit(bitmap.width, bitmap.height, MAX_EDGE);
+  const img = await loadImage(file);
+  const { width, height } = fit(img.width, img.height, MAX_EDGE);
 
   // If already small enough, don't re-encode
-  if (width === bitmap.width && height === bitmap.height && file.size < 500 * 1024) {
+  if (width === img.width && height === img.height && file.size < 500 * 1024) {
     return file;
   }
 
@@ -32,7 +32,7 @@ export async function compressImage(file: File): Promise<File> {
   const ctx = canvas.getContext('2d');
   if (!ctx) return file;
 
-  ctx.drawImage(bitmap, 0, 0, width, height);
+  ctx.drawImage(img.source, 0, 0, width, height);
 
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, 'image/jpeg', QUALITY)
@@ -53,25 +53,43 @@ function fit(w: number, h: number, max: number): { width: number; height: number
   };
 }
 
-async function loadBitmap(file: File): Promise<ImageBitmap> {
-  // createImageBitmap is faster and available in all modern browsers
-  if ('createImageBitmap' in window) {
-    return await createImageBitmap(file);
+interface LoadedImage {
+  source: CanvasImageSource;
+  width: number;
+  height: number;
+}
+
+async function loadImage(file: File): Promise<LoadedImage> {
+  // Preferred path: createImageBitmap (fast, all modern browsers)
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file);
+      return {
+        source: bitmap,
+        width: bitmap.width,
+        height: bitmap.height,
+      };
+    } catch {
+      // fall through to the <img> path below
+    }
   }
-  // Fallback for very old browsers
-  return new Promise((resolve, reject) => {
+
+  // Fallback: HTMLImageElement
+  return new Promise<LoadedImage>((resolve, reject) => {
     const img = new Image();
+    const url = URL.createObjectURL(file);
     img.onload = () => {
-      // Wrap HTMLImageElement in a minimal ImageBitmap-like object
+      URL.revokeObjectURL(url);
       resolve({
+        source: img,
         width: img.naturalWidth,
         height: img.naturalHeight,
-        // @ts-expect-error — drawImage accepts HTMLImageElement too
-        close: () => {},
-        __img: img,
-      } as unknown as ImageBitmap);
+      });
     };
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+    img.src = url;
   });
 }
