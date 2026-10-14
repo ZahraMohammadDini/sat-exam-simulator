@@ -1,0 +1,40 @@
+cat > .gitignore << 'EOF'
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Next.js
+.next
+out
+build
+dist
+
+# Environment
+.env
+.env*.local
+.env.local
+
+# Vercel
+.vercel
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Misc
+.DS_Store
+Thumbs.db
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing
+coverage
+EOF
