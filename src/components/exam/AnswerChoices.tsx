@@ -22,7 +22,7 @@ export function AnswerChoices({
   disabled,
 }: AnswerChoicesProps) {
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2.5">
       {choices.map((choice) => {
         const isSelected = selected === choice.id;
         const isStruck = strikethrough.includes(choice.id);
@@ -30,34 +30,38 @@ export function AnswerChoices({
           <li key={choice.id}>
             <div
               className={clsx(
-                'group flex items-start gap-3 rounded-md border p-4 transition-all',
+                'group flex items-center gap-3 rounded-md border transition-all',
                 isSelected
-                  ? 'border-accent bg-surface-selected'
+                  ? 'border-accent bg-surface-selected shadow-sm'
                   : 'border-border-default bg-surface hover:border-border-default hover:bg-surface-hover',
-                disabled && 'opacity-70'
+                isStruck && !isSelected && 'opacity-50',
+                disabled && 'cursor-not-allowed opacity-60'
               )}
             >
               <button
                 type="button"
-                onClick={() => !disabled && onSelect(choice.id)}
-                className="flex flex-1 items-start gap-3 text-left focus:outline-none"
+                onClick={() => !disabled && !isStruck && onSelect(choice.id)}
+                className="flex flex-1 items-center gap-3 p-3.5 text-left focus:outline-none"
                 aria-pressed={isSelected}
                 disabled={disabled}
               >
+                {/* Letter circle */}
                 <span
                   className={clsx(
-                    'mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full border text-sm font-semibold transition-colors',
+                    'flex h-8 w-8 flex-none items-center justify-center rounded-full border text-sm font-semibold transition-all',
                     isSelected
                       ? 'border-accent bg-accent text-white'
-                      : 'border-border-default bg-surface text-text-secondary'
+                      : 'border-border-default bg-surface text-text-secondary group-hover:border-accent/40'
                   )}
                 >
                   {choice.id}
                 </span>
+
+                {/* Choice content */}
                 <div
                   className={clsx(
-                    'choice-text flex-1 pt-1',
-                    isStruck && 'line-through opacity-50'
+                    'choice-text flex-1 leading-snug',
+                    isStruck && 'line-through'
                   )}
                 >
                   {choice.mode === 'text' ? (
@@ -67,25 +71,36 @@ export function AnswerChoices({
                     <img
                       src={choice.imageUrl}
                       alt={`Choice ${choice.id}`}
-                      className="max-h-32 rounded"
+                      className="img-frame-choice"
                       draggable={false}
                     />
                   )}
                 </div>
               </button>
+
+              {/* Strikethrough toggle — visible on hover */}
               {onToggleStrikethrough && (
                 <button
                   type="button"
                   onClick={() => onToggleStrikethrough(choice.id)}
                   className={clsx(
-                    'rounded p-1.5 text-xs text-text-muted transition-all',
-                    'hover:bg-surface-hover hover:text-text-primary',
-                    isStruck ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    'mr-3 rounded px-2 py-1 text-xs font-medium transition-all',
+                    'text-text-muted hover:bg-surface-hover hover:text-text-primary',
+                    isStruck ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
                   )}
-                  aria-label={isStruck ? 'Remove strikethrough' : 'Strike through choice'}
+                  aria-label={isStruck ? 'Remove strikethrough' : 'Eliminate this choice'}
                   title="Eliminate answer choice"
                 >
-                  ✕
+                  {isStruck ? (
+                    <span className="flex items-center gap-1">
+                      <span aria-hidden>↩</span>
+                      <span className="hidden sm:inline">Undo</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 line-through">
+                      <span aria-hidden>A</span>
+                    </span>
+                  )}
                 </button>
               )}
             </div>

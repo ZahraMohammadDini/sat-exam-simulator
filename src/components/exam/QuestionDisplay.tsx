@@ -24,20 +24,24 @@ export function QuestionDisplay({
   disabled,
 }: QuestionDisplayProps) {
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+    <div className="flex flex-col gap-8 lg:flex-row">
+      {/* Passage — left panel (if present) */}
       {question.passage && (
-        <div className="lg:w-1/2 lg:flex-shrink-0">
+        <div className="lg:w-[48%] lg:flex-shrink-0">
           <PassagePanel question={question} />
         </div>
       )}
-      <div className="flex-1 space-y-6">
+
+      {/* Question side */}
+      <div className="flex flex-1 flex-col gap-6">
+        {/* Stem */}
         <div className="question-stem">
           {question.stemIsImage && question.stemImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={question.stemImage}
               alt="Question stem"
-              className="max-w-full rounded-md border border-border-default"
+              className="img-frame"
               draggable={false}
             />
           ) : (
@@ -45,6 +49,10 @@ export function QuestionDisplay({
           )}
         </div>
 
+        {/* Divider between stem and choices */}
+        <div className="h-px bg-border-subtle" />
+
+        {/* Answer input */}
         {question.type === 'multiple_choice' && question.choices && (
           <AnswerChoices
             choices={question.choices}

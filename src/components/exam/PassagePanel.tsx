@@ -15,12 +15,12 @@ export function PassagePanel({ question }: PassagePanelProps) {
 
   if (question.passageIsImage && question.passageImage) {
     return (
-      <div className="passage-text">
+      <div className="overflow-hidden rounded-lg border border-border-subtle bg-surface">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={question.passageImage}
           alt="Reading passage"
-          className="w-full rounded-md border border-border-subtle"
+          className="img-frame-passage"
           draggable={false}
         />
       </div>
@@ -29,11 +29,12 @@ export function PassagePanel({ question }: PassagePanelProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex overflow-hidden rounded-md border border-border-subtle bg-surface">
-        <div className="w-1 flex-shrink-0 bg-accent/30" aria-hidden />
+      {/* Passage container with left accent bar */}
+      <div className="flex overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-card">
+        <div className="w-1 flex-shrink-0 bg-accent/25" aria-hidden />
         <div
           ref={containerRef}
-          className="passage-text thin-scroll max-h-[70vh] flex-1 overflow-y-auto p-5"
+          className="passage-text thin-scroll max-h-[72vh] flex-1 overflow-y-auto px-5 py-5"
           onMouseUp={() => {
             const sel = window.getSelection();
             if (!sel || sel.isCollapsed) return;
@@ -54,8 +55,10 @@ export function PassagePanel({ question }: PassagePanelProps) {
           <KatexRenderer text={question.passage} />
         </div>
       </div>
+
+      {/* Highlights tray */}
       {highlights.length > 0 && (
-        <div className="rounded-md border border-border-subtle bg-surface p-3">
+        <div className="rounded-md border border-highlight/40 bg-highlight/10 p-3">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
               Highlights
@@ -63,15 +66,19 @@ export function PassagePanel({ question }: PassagePanelProps) {
             <button
               type="button"
               onClick={() => setHighlights([])}
-              className="text-xs text-text-muted transition-colors hover:text-text-primary"
+              className="rounded px-1.5 py-0.5 text-xs text-text-muted transition-colors hover:bg-highlight/30 hover:text-text-primary"
             >
-              Clear
+              Clear all
             </button>
           </div>
-          <ul className="space-y-1 text-xs text-text-primary">
+          <ul className="space-y-1">
             {highlights.map((h) => (
-              <li key={h.id} className="rounded bg-highlight/60 px-2 py-1">
-                {h.text}
+              <li
+                key={h.id}
+                className="flex items-start gap-2 rounded-sm bg-highlight/50 px-2 py-1 text-xs text-text-primary"
+              >
+                <span className="mt-0.5 text-text-muted" aria-hidden>✎</span>
+                <span className="line-clamp-2">{h.text}</span>
               </li>
             ))}
           </ul>

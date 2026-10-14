@@ -287,10 +287,12 @@ export function ExamShell({ test, session }: ExamShellProps) {
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6 lg:px-6">
         <main className="min-w-0 flex-1">
           {currentQuestion ? (
-            <div className="rounded-lg border border-border-subtle bg-surface p-6 shadow-card lg:p-8">
-              <div className="mb-6 flex items-center justify-between text-sm text-text-muted">
-                <span>
-                  Question {currentQuestionIndex + 1} of {currentModule.questions.length}
+            <div className="rounded-xl border border-border-subtle bg-surface p-6 shadow-card lg:p-8">
+              {/* Question number label */}
+              <div className="mb-5 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Question {currentQuestionIndex + 1}{' '}
+                  <span className="font-normal">of {currentModule.questions.length}</span>
                 </span>
               </div>
               <QuestionDisplay
@@ -305,7 +307,8 @@ export function ExamShell({ test, session }: ExamShellProps) {
             <p className="text-text-muted">No questions in this module.</p>
           )}
 
-          <div className="mt-6 flex items-center justify-between gap-3">
+          {/* Navigation row */}
+          <div className="mt-5 flex items-center justify-between gap-3">
             <Button
               variant="secondary"
               onClick={() => setCurrentQuestionIndex((i) => Math.max(0, i - 1))}
@@ -332,9 +335,12 @@ export function ExamShell({ test, session }: ExamShellProps) {
           </div>
         </main>
 
+        {/* Right sidebar — question navigator */}
         <aside className="hidden w-64 flex-shrink-0 lg:block">
-          <div className="sticky top-20 rounded-lg border border-border-subtle bg-surface p-4 shadow-card">
-            <h3 className="mb-3 text-sm font-semibold text-text-primary">Questions</h3>
+          <div className="sticky top-20 rounded-xl border border-border-subtle bg-surface p-4 shadow-card">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
+              Questions
+            </h3>
             <QuestionNavigator
               questions={currentModule.questions}
               answers={moduleAnswerMap}
@@ -346,6 +352,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
         </aside>
       </div>
 
+      {/* Mobile navigator drawer */}
       {navigatorOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <div
@@ -359,7 +366,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
               <button
                 type="button"
                 onClick={() => setNavigatorOpen(false)}
-                className="rounded p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
+                className="rounded-md p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
                 aria-label="Close navigator"
               >
                 ✕

@@ -25,14 +25,15 @@ export function StudentNav({ name }: StudentNavProps) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="hidden text-sm text-bluebook-muted sm:inline">
-        Hi, <strong className="text-bluebook-text">{name}</strong>
+      <span className="hidden text-sm text-text-muted sm:inline">
+        Hi,{' '}
+        <strong className="font-semibold text-text-primary">{name}</strong>
       </span>
       <button
         type="button"
         onClick={logout}
         disabled={busy}
-        className="rounded-md border border-bluebook-border px-3 py-1.5 text-sm hover:bg-bluebook-bg disabled:opacity-50"
+        className="rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary disabled:opacity-50"
       >
         {busy ? 'Signing out…' : 'Sign out'}
       </button>

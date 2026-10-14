@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;1,400&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
@@ -91,4 +91,58 @@ mark.bb-highlight {
 .focus-ring:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+}
+
+/* ─── Image frame: consistent framing for all exam images ──────────────────── */
+/* Stem / passage images */
+.img-frame {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f7f8f9;
+  object-fit: contain;
+}
+
+/* Choice images — fixed height so answer rows stay even */
+.img-frame-choice {
+  display: block;
+  max-width: 100%;
+  max-height: 96px;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f7f8f9;
+  object-fit: contain;
+}
+
+/* Review / explanation images */
+.img-frame-review {
+  display: block;
+  max-width: 100%;
+  max-height: 160px;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f7f8f9;
+  object-fit: contain;
+}
+
+/* Passage image — full width, taller allowance */
+.img-frame-passage {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f7f8f9;
+  object-fit: contain;
+}
+
+/* Smooth page transitions */
+@media (prefers-reduced-motion: no-preference) {
+  .transition-page {
+    transition: opacity 0.15s ease;
+  }
 }

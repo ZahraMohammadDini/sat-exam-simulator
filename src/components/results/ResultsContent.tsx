@@ -6,6 +6,7 @@ import { ResultsSummary } from './ResultsSummary';
 import { AnswerReviewList } from './AnswerReviewList';
 import { PDFDownloadButton } from './PDFDownloadButton';
 import { Alert } from '@/components/ui/Alert';
+import Link from 'next/link';
 
 export interface ResultsContentProps {
   results: Results;
@@ -26,19 +27,26 @@ export function ResultsContent({
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
       {isPreview && (
         <Alert tone="warning" title="Preview mode">
-          This is an admin preview session. It does not appear in dashboard
-          statistics.
+          This is an admin preview session. It does not appear in dashboard statistics.
         </Alert>
       )}
 
-      <div className="flex justify-end">
+      {/* Top action bar */}
+      <div className="flex items-center justify-between">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-accent"
+        >
+          <span aria-hidden>←</span>
+          Back to test list
+        </Link>
         <PDFDownloadButton
           targetRef={printRef}
           filename={`SAT-Results-${results.completedAt.slice(0, 10)}.pdf`}
         />
       </div>
 
-      <div ref={printRef} className="space-y-6 bg-app-bg p-1">
+      <div ref={printRef} className="space-y-6">
         <ResultsSummary
           testTitle={results.testTitle}
           completedAt={results.completedAt}
@@ -57,15 +65,6 @@ export function ResultsContent({
             Your admin has disabled per-question review for this test.
           </Alert>
         )}
-      </div>
-
-      <div className="pt-4 text-center">
-        <a
-          href="/"
-          className="text-sm text-text-muted transition-colors hover:text-accent hover:underline"
-        >
-          ← Back to test list
-        </a>
       </div>
     </div>
   );

@@ -1,0 +1,1618 @@
+From 3a8424f47140719b82317cae09033f69f0d7a523 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Wed, 14 Oct 2026 22:31:38 +0000
+Subject: [PATCH] feat: Bluebook-style UI polish
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- globals.css: Add image-frame utility classes (.img-frame, .img-frame-choice,
+  .img-frame-review, .img-frame-passage) for consistent image framing with
+  rounded corners, subtle borders, and object-fit: contain across all exam views
+
+- page.tsx: Full landing page redesign — sticky nav bar, centered hero with
+  SVG icon, clean test list with count, polished footer
+
+- student layout: Fix stale bluebook-* class names → design tokens; polish
+  sticky header with accent badge for Student label
+
+- StudentDashboardClient: Fix all stale bluebook-* classes; add welcome card
+  with avg score stat, polished test cards grid, attempts table with hover states
+
+- StudentNav: Fix stale bluebook-* classes → design tokens
+
+- ExamShell: Upgrade question card to rounded-xl; question number uses
+  uppercase tracking label; sidebar heading uses uppercase tracking style
+
+- QuestionDisplay: Add horizontal divider between stem and choices;
+  passage panel takes 48% width on desktop; stem images use .img-frame
+
+- AnswerChoices: Cleaner eliminate button (struck-through A vs Undo);
+  images use .img-frame-choice; selected row has shadow-sm
+
+- PassagePanel: Passage image uses .img-frame-passage; highlights tray
+  styled with highlight/10 bg and pencil icon
+
+- SectionBreak: SVG icons (checkmark / badge); rounded-2xl card with
+  shadow-modal; full-width CTA button
+
+- ResultsSummary: Score hero with colour-coded 5xl number and score bar;
+  per-module mini progress bars; rounded-xl card with header band
+
+- ResultsContent: Top action bar with back link + PDF download side by side
+
+- AnswerReviewList: Correct/wrong icon circles; two-column answer summary
+  cards (your answer / correct answer); choices list with colour-coded rows;
+  explanation panel in accent-subtle; chevron rotates on expand
+---
+ package-lock.json                             |  85 +-------
+ src/app/globals.css                           |  56 +++++-
+ src/app/page.tsx                              | 106 +++++++---
+ src/app/student/(authed)/layout.tsx           |  10 +-
+ src/components/exam/AnswerChoices.tsx         |  47 +++--
+ src/components/exam/ExamShell.tsx             |  23 ++-
+ src/components/exam/PassagePanel.tsx          |  29 +--
+ src/components/exam/QuestionDisplay.tsx       |  16 +-
+ src/components/exam/SectionBreak.tsx          |  57 ++++--
+ src/components/results/AnswerReviewList.tsx   | 181 +++++++++++-------
+ src/components/results/ResultsContent.tsx     |  25 ++-
+ src/components/results/ResultsSummary.tsx     | 109 +++++++----
+ .../student/StudentDashboardClient.tsx        | 158 ++++++++-------
+ src/components/student/StudentNav.tsx         |   7 +-
+ 14 files changed, 560 insertions(+), 349 deletions(-)
+
+diff --git a/package-lock.json b/package-lock.json
+index 7c70f81..97e368c 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1250,9 +1250,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1339,9 +1336,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1358,9 +1352,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1377,9 +1368,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1396,9 +1384,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1682,9 +1667,6 @@
+         "arm"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1699,9 +1681,6 @@
+         "arm"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1716,9 +1695,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1733,9 +1709,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1750,9 +1723,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1767,9 +1737,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1784,9 +1751,6 @@
+         "ppc64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1801,9 +1765,6 @@
+         "ppc64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1818,9 +1779,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1835,9 +1793,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1852,9 +1807,6 @@
+         "s390x"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1869,9 +1821,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1886,9 +1835,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2636,9 +2582,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2653,9 +2596,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2670,9 +2610,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2687,9 +2624,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2704,9 +2638,6 @@
+         "ppc64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2721,9 +2652,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2738,9 +2666,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2755,9 +2680,6 @@
+         "s390x"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2772,9 +2694,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2789,9 +2708,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -5250,6 +5166,7 @@
+       "version": "2.3.3",
+       "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+       "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
++      "dev": true,
+       "hasInstallScript": true,
+       "license": "MIT",
+       "optional": true,
+diff --git a/src/app/globals.css b/src/app/globals.css
+index ef55102..c92ecb9 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -1,5 +1,5 @@
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap');
++@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;1,400&display=swap');
+ @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+ 
+ @tailwind base;
+@@ -92,3 +92,57 @@ mark.bb-highlight {
+   outline: none;
+   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+ }
++
++/* ─── Image frame: consistent framing for all exam images ──────────────────── */
++/* Stem / passage images */
++.img-frame {
++  display: block;
++  max-width: 100%;
++  height: auto;
++  border-radius: 8px;
++  border: 1px solid #e5e7eb;
++  background: #f7f8f9;
++  object-fit: contain;
++}
++
++/* Choice images — fixed height so answer rows stay even */
++.img-frame-choice {
++  display: block;
++  max-width: 100%;
++  max-height: 96px;
++  height: auto;
++  border-radius: 6px;
++  border: 1px solid #e5e7eb;
++  background: #f7f8f9;
++  object-fit: contain;
++}
++
++/* Review / explanation images */
++.img-frame-review {
++  display: block;
++  max-width: 100%;
++  max-height: 160px;
++  height: auto;
++  border-radius: 6px;
++  border: 1px solid #e5e7eb;
++  background: #f7f8f9;
++  object-fit: contain;
++}
++
++/* Passage image — full width, taller allowance */
++.img-frame-passage {
++  display: block;
++  width: 100%;
++  height: auto;
++  border-radius: 8px;
++  border: 1px solid #e5e7eb;
++  background: #f7f8f9;
++  object-fit: contain;
++}
++
++/* Smooth page transitions */
++@media (prefers-reduced-motion: no-preference) {
++  .transition-page {
++    transition: opacity 0.15s ease;
++  }
++}
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index a3488dd..ce8663c 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -20,7 +20,7 @@ export default async function Home() {
+     requireStudent(),
+   ]);
+ 
+-  const summaries = tests.map((t) => ({
++  const summaries = tests.map((t: { id: string; title: string; description: string | null; _count: { modules: number } }) => ({
+     id: t.id,
+     title: t.title,
+     description: t.description,
+@@ -28,36 +28,90 @@ export default async function Home() {
+   }));
+ 
+   return (
+-    <main className="mx-auto max-w-4xl px-4 py-12">
+-      <header className="mb-12">
+-        <div className="flex flex-wrap items-center justify-between gap-4">
+-          <div>
+-            <h1 className="text-2xl font-bold text-text-primary">
+-              SAT Exam Simulator
+-            </h1>
+-            <p className="mt-2 text-base text-text-secondary">
+-              Timed practice with adaptive modules. Enter a test password to begin.
+-            </p>
++    <div className="flex min-h-screen flex-col bg-app-bg">
++      {/* Top nav bar */}
++      <header className="border-b border-border-subtle bg-surface">
++        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
++          <div className="flex items-center gap-2">
++            <span className="text-sm font-bold text-text-primary">SAT Exam Simulator</span>
++          </div>
++          <div className="flex items-center gap-2">
++            <Link
++              href={student ? '/student/dashboard' : '/student'}
++              className="rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
++            >
++              {student ? `My dashboard` : 'Student sign in'}
++            </Link>
++            <Link
++              href="/admin"
++              className="rounded-md px-3 py-1.5 text-sm text-text-muted transition-colors hover:text-text-primary"
++            >
++              Admin
++            </Link>
+           </div>
+-          <Link
+-            href={student ? '/student/dashboard' : '/student'}
+-            className="rounded-md border border-border-default bg-surface px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
+-          >
+-            {student ? `Hi, ${student.name ?? 'student'}` : 'Student sign in'}
+-          </Link>
+         </div>
+       </header>
+ 
+-      <TestListClient tests={summaries} />
++      {/* Hero */}
++      <main className="flex-1">
++        <div className="mx-auto max-w-4xl px-4">
++          {/* Hero section */}
++          <div className="py-12 text-center">
++            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-white shadow-md">
++              <svg
++                aria-hidden
++                className="h-7 w-7"
++                fill="none"
++                viewBox="0 0 24 24"
++                stroke="currentColor"
++                strokeWidth={2}
++              >
++                <path
++                  strokeLinecap="round"
++                  strokeLinejoin="round"
++                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
++                />
++              </svg>
++            </div>
++            <h1 className="text-2xl font-bold text-text-primary sm:text-3xl">
++              SAT Practice Exams
++            </h1>
++            <p className="mx-auto mt-3 max-w-md text-base text-text-secondary">
++              Full-length adaptive tests with timed modules, just like the real Bluebook experience.
++            </p>
++          </div>
+ 
+-      <footer className="mt-16 flex items-center justify-center gap-6 text-xs text-text-muted">
+-        <Link href="/admin" className="hover:text-text-primary hover:underline">
+-          Admin
+-        </Link>
+-        <Link href="/student" className="hover:text-text-primary hover:underline">
+-          Student
+-        </Link>
++          {/* Test list */}
++          <div className="pb-16">
++            {summaries.length === 0 ? (
++              <div className="rounded-xl border border-border-subtle bg-surface p-10 text-center shadow-card">
++                <p className="text-sm text-text-muted">
++                  No tests are published yet. Sign in as Admin to create one.
++                </p>
++              </div>
++            ) : (
++              <>
++                <p className="mb-4 text-sm font-medium text-text-muted">
++                  {summaries.length} available test{summaries.length === 1 ? '' : 's'}
++                </p>
++                <TestListClient tests={summaries} />
++              </>
++            )}
++          </div>
++        </div>
++      </main>
++
++      {/* Footer */}
++      <footer className="border-t border-border-subtle bg-surface py-5">
++        <div className="mx-auto flex max-w-4xl items-center justify-center gap-6 px-4 text-xs text-text-muted">
++          <Link href="/admin" className="transition-colors hover:text-text-primary hover:underline">
++            Admin portal
++          </Link>
++          <Link href="/student" className="transition-colors hover:text-text-primary hover:underline">
++            Student sign in
++          </Link>
++        </div>
+       </footer>
+-    </main>
++    </div>
+   );
+ }
+diff --git a/src/app/student/(authed)/layout.tsx b/src/app/student/(authed)/layout.tsx
+index ea3720d..be1a117 100644
+--- a/src/app/student/(authed)/layout.tsx
++++ b/src/app/student/(authed)/layout.tsx
+@@ -15,12 +15,14 @@ export default async function AuthedStudentLayout({
+   if (!student) redirect('/student');
+ 
+   return (
+-    <div className="min-h-screen bg-bluebook-bg">
+-      <header className="border-b border-bluebook-border bg-white">
++    <div className="min-h-screen bg-app-bg">
++      <header className="sticky top-0 z-10 border-b border-border-subtle bg-surface shadow-card">
+         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+           <Link href="/student/dashboard" className="flex items-center gap-2">
+-            <span className="text-base font-bold">SAT Prep</span>
+-            <span className="text-xs text-bluebook-muted">Student</span>
++            <span className="text-sm font-bold text-text-primary">SAT Prep</span>
++            <span className="rounded-sm bg-accent-subtle px-1.5 py-0.5 text-xs font-medium text-accent">
++              Student
++            </span>
+           </Link>
+           <StudentNav name={student.name ?? student.username ?? 'Student'} />
+         </div>
+diff --git a/src/components/exam/AnswerChoices.tsx b/src/components/exam/AnswerChoices.tsx
+index d804858..7b0f69c 100644
+--- a/src/components/exam/AnswerChoices.tsx
++++ b/src/components/exam/AnswerChoices.tsx
+@@ -22,7 +22,7 @@ export function AnswerChoices({
+   disabled,
+ }: AnswerChoicesProps) {
+   return (
+-    <ul className="space-y-2">
++    <ul className="space-y-2.5">
+       {choices.map((choice) => {
+         const isSelected = selected === choice.id;
+         const isStruck = strikethrough.includes(choice.id);
+@@ -30,34 +30,38 @@ export function AnswerChoices({
+           <li key={choice.id}>
+             <div
+               className={clsx(
+-                'group flex items-start gap-3 rounded-md border p-4 transition-all',
++                'group flex items-center gap-3 rounded-md border transition-all',
+                 isSelected
+-                  ? 'border-accent bg-surface-selected'
++                  ? 'border-accent bg-surface-selected shadow-sm'
+                   : 'border-border-default bg-surface hover:border-border-default hover:bg-surface-hover',
+-                disabled && 'opacity-70'
++                isStruck && !isSelected && 'opacity-50',
++                disabled && 'cursor-not-allowed opacity-60'
+               )}
+             >
+               <button
+                 type="button"
+-                onClick={() => !disabled && onSelect(choice.id)}
+-                className="flex flex-1 items-start gap-3 text-left focus:outline-none"
++                onClick={() => !disabled && !isStruck && onSelect(choice.id)}
++                className="flex flex-1 items-center gap-3 p-3.5 text-left focus:outline-none"
+                 aria-pressed={isSelected}
+                 disabled={disabled}
+               >
++                {/* Letter circle */}
+                 <span
+                   className={clsx(
+-                    'mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full border text-sm font-semibold transition-colors',
++                    'flex h-8 w-8 flex-none items-center justify-center rounded-full border text-sm font-semibold transition-all',
+                     isSelected
+                       ? 'border-accent bg-accent text-white'
+-                      : 'border-border-default bg-surface text-text-secondary'
++                      : 'border-border-default bg-surface text-text-secondary group-hover:border-accent/40'
+                   )}
+                 >
+                   {choice.id}
+                 </span>
++
++                {/* Choice content */}
+                 <div
+                   className={clsx(
+-                    'choice-text flex-1 pt-1',
+-                    isStruck && 'line-through opacity-50'
++                    'choice-text flex-1 leading-snug',
++                    isStruck && 'line-through'
+                   )}
+                 >
+                   {choice.mode === 'text' ? (
+@@ -67,25 +71,36 @@ export function AnswerChoices({
+                     <img
+                       src={choice.imageUrl}
+                       alt={`Choice ${choice.id}`}
+-                      className="max-h-32 rounded"
++                      className="img-frame-choice"
+                       draggable={false}
+                     />
+                   )}
+                 </div>
+               </button>
++
++              {/* Strikethrough toggle — visible on hover */}
+               {onToggleStrikethrough && (
+                 <button
+                   type="button"
+                   onClick={() => onToggleStrikethrough(choice.id)}
+                   className={clsx(
+-                    'rounded p-1.5 text-xs text-text-muted transition-all',
+-                    'hover:bg-surface-hover hover:text-text-primary',
+-                    isStruck ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
++                    'mr-3 rounded px-2 py-1 text-xs font-medium transition-all',
++                    'text-text-muted hover:bg-surface-hover hover:text-text-primary',
++                    isStruck ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+                   )}
+-                  aria-label={isStruck ? 'Remove strikethrough' : 'Strike through choice'}
++                  aria-label={isStruck ? 'Remove strikethrough' : 'Eliminate this choice'}
+                   title="Eliminate answer choice"
+                 >
+-                  ✕
++                  {isStruck ? (
++                    <span className="flex items-center gap-1">
++                      <span aria-hidden>↩</span>
++                      <span className="hidden sm:inline">Undo</span>
++                    </span>
++                  ) : (
++                    <span className="flex items-center gap-1 line-through">
++                      <span aria-hidden>A</span>
++                    </span>
++                  )}
+                 </button>
+               )}
+             </div>
+diff --git a/src/components/exam/ExamShell.tsx b/src/components/exam/ExamShell.tsx
+index b46df4e..1457713 100644
+--- a/src/components/exam/ExamShell.tsx
++++ b/src/components/exam/ExamShell.tsx
+@@ -287,10 +287,12 @@ export function ExamShell({ test, session }: ExamShellProps) {
+       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6 lg:px-6">
+         <main className="min-w-0 flex-1">
+           {currentQuestion ? (
+-            <div className="rounded-lg border border-border-subtle bg-surface p-6 shadow-card lg:p-8">
+-              <div className="mb-6 flex items-center justify-between text-sm text-text-muted">
+-                <span>
+-                  Question {currentQuestionIndex + 1} of {currentModule.questions.length}
++            <div className="rounded-xl border border-border-subtle bg-surface p-6 shadow-card lg:p-8">
++              {/* Question number label */}
++              <div className="mb-5 flex items-center justify-between">
++                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
++                  Question {currentQuestionIndex + 1}{' '}
++                  <span className="font-normal">of {currentModule.questions.length}</span>
+                 </span>
+               </div>
+               <QuestionDisplay
+@@ -305,7 +307,8 @@ export function ExamShell({ test, session }: ExamShellProps) {
+             <p className="text-text-muted">No questions in this module.</p>
+           )}
+ 
+-          <div className="mt-6 flex items-center justify-between gap-3">
++          {/* Navigation row */}
++          <div className="mt-5 flex items-center justify-between gap-3">
+             <Button
+               variant="secondary"
+               onClick={() => setCurrentQuestionIndex((i) => Math.max(0, i - 1))}
+@@ -332,9 +335,12 @@ export function ExamShell({ test, session }: ExamShellProps) {
+           </div>
+         </main>
+ 
++        {/* Right sidebar — question navigator */}
+         <aside className="hidden w-64 flex-shrink-0 lg:block">
+-          <div className="sticky top-20 rounded-lg border border-border-subtle bg-surface p-4 shadow-card">
+-            <h3 className="mb-3 text-sm font-semibold text-text-primary">Questions</h3>
++          <div className="sticky top-20 rounded-xl border border-border-subtle bg-surface p-4 shadow-card">
++            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
++              Questions
++            </h3>
+             <QuestionNavigator
+               questions={currentModule.questions}
+               answers={moduleAnswerMap}
+@@ -346,6 +352,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
+         </aside>
+       </div>
+ 
++      {/* Mobile navigator drawer */}
+       {navigatorOpen && (
+         <div className="fixed inset-0 z-40 flex lg:hidden">
+           <div
+@@ -359,7 +366,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
+               <button
+                 type="button"
+                 onClick={() => setNavigatorOpen(false)}
+-                className="rounded p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
++                className="rounded-md p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
+                 aria-label="Close navigator"
+               >
+                 ✕
+diff --git a/src/components/exam/PassagePanel.tsx b/src/components/exam/PassagePanel.tsx
+index 3416bc7..32dbc88 100644
+--- a/src/components/exam/PassagePanel.tsx
++++ b/src/components/exam/PassagePanel.tsx
+@@ -15,12 +15,12 @@ export function PassagePanel({ question }: PassagePanelProps) {
+ 
+   if (question.passageIsImage && question.passageImage) {
+     return (
+-      <div className="passage-text">
++      <div className="overflow-hidden rounded-lg border border-border-subtle bg-surface">
+         {/* eslint-disable-next-line @next/next/no-img-element */}
+         <img
+           src={question.passageImage}
+           alt="Reading passage"
+-          className="w-full rounded-md border border-border-subtle"
++          className="img-frame-passage"
+           draggable={false}
+         />
+       </div>
+@@ -29,11 +29,12 @@ export function PassagePanel({ question }: PassagePanelProps) {
+ 
+   return (
+     <div className="space-y-3">
+-      <div className="flex overflow-hidden rounded-md border border-border-subtle bg-surface">
+-        <div className="w-1 flex-shrink-0 bg-accent/30" aria-hidden />
++      {/* Passage container with left accent bar */}
++      <div className="flex overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-card">
++        <div className="w-1 flex-shrink-0 bg-accent/25" aria-hidden />
+         <div
+           ref={containerRef}
+-          className="passage-text thin-scroll max-h-[70vh] flex-1 overflow-y-auto p-5"
++          className="passage-text thin-scroll max-h-[72vh] flex-1 overflow-y-auto px-5 py-5"
+           onMouseUp={() => {
+             const sel = window.getSelection();
+             if (!sel || sel.isCollapsed) return;
+@@ -54,8 +55,10 @@ export function PassagePanel({ question }: PassagePanelProps) {
+           <KatexRenderer text={question.passage} />
+         </div>
+       </div>
++
++      {/* Highlights tray */}
+       {highlights.length > 0 && (
+-        <div className="rounded-md border border-border-subtle bg-surface p-3">
++        <div className="rounded-md border border-highlight/40 bg-highlight/10 p-3">
+           <div className="mb-2 flex items-center justify-between">
+             <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+               Highlights
+@@ -63,15 +66,19 @@ export function PassagePanel({ question }: PassagePanelProps) {
+             <button
+               type="button"
+               onClick={() => setHighlights([])}
+-              className="text-xs text-text-muted transition-colors hover:text-text-primary"
++              className="rounded px-1.5 py-0.5 text-xs text-text-muted transition-colors hover:bg-highlight/30 hover:text-text-primary"
+             >
+-              Clear
++              Clear all
+             </button>
+           </div>
+-          <ul className="space-y-1 text-xs text-text-primary">
++          <ul className="space-y-1">
+             {highlights.map((h) => (
+-              <li key={h.id} className="rounded bg-highlight/60 px-2 py-1">
+-                {h.text}
++              <li
++                key={h.id}
++                className="flex items-start gap-2 rounded-sm bg-highlight/50 px-2 py-1 text-xs text-text-primary"
++              >
++                <span className="mt-0.5 text-text-muted" aria-hidden>✎</span>
++                <span className="line-clamp-2">{h.text}</span>
+               </li>
+             ))}
+           </ul>
+diff --git a/src/components/exam/QuestionDisplay.tsx b/src/components/exam/QuestionDisplay.tsx
+index 5e06ca8..1ac7480 100644
+--- a/src/components/exam/QuestionDisplay.tsx
++++ b/src/components/exam/QuestionDisplay.tsx
+@@ -24,20 +24,24 @@ export function QuestionDisplay({
+   disabled,
+ }: QuestionDisplayProps) {
+   return (
+-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
++    <div className="flex flex-col gap-8 lg:flex-row">
++      {/* Passage — left panel (if present) */}
+       {question.passage && (
+-        <div className="lg:w-1/2 lg:flex-shrink-0">
++        <div className="lg:w-[48%] lg:flex-shrink-0">
+           <PassagePanel question={question} />
+         </div>
+       )}
+-      <div className="flex-1 space-y-6">
++
++      {/* Question side */}
++      <div className="flex flex-1 flex-col gap-6">
++        {/* Stem */}
+         <div className="question-stem">
+           {question.stemIsImage && question.stemImage ? (
+             // eslint-disable-next-line @next/next/no-img-element
+             <img
+               src={question.stemImage}
+               alt="Question stem"
+-              className="max-w-full rounded-md border border-border-default"
++              className="img-frame"
+               draggable={false}
+             />
+           ) : (
+@@ -45,6 +49,10 @@ export function QuestionDisplay({
+           )}
+         </div>
+ 
++        {/* Divider between stem and choices */}
++        <div className="h-px bg-border-subtle" />
++
++        {/* Answer input */}
+         {question.type === 'multiple_choice' && question.choices && (
+           <AnswerChoices
+             choices={question.choices}
+diff --git a/src/components/exam/SectionBreak.tsx b/src/components/exam/SectionBreak.tsx
+index 7f75f2c..41b6b4e 100644
+--- a/src/components/exam/SectionBreak.tsx
++++ b/src/components/exam/SectionBreak.tsx
+@@ -10,22 +10,49 @@ export interface SectionBreakProps {
+ 
+ export function SectionBreak({ nextModuleTitle, onStart, isFinal }: SectionBreakProps) {
+   return (
+-    <div className="flex min-h-[60vh] items-center justify-center bg-app-bg p-6">
+-      <div className="max-w-md rounded-lg border border-border-subtle bg-surface p-10 text-center shadow-card">
+-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-subtle text-accent">
+-          <span className="text-xl" aria-hidden>✓</span>
++    <div className="flex min-h-screen items-center justify-center bg-app-bg p-6">
++      <div className="w-full max-w-sm text-center">
++        {/* Icon */}
++        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent text-white shadow-lg">
++          {isFinal ? (
++            <svg
++              aria-hidden
++              className="h-8 w-8"
++              fill="none"
++              viewBox="0 0 24 24"
++              stroke="currentColor"
++              strokeWidth={2}
++            >
++              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
++            </svg>
++          ) : (
++            <svg
++              aria-hidden
++              className="h-8 w-8"
++              fill="none"
++              viewBox="0 0 24 24"
++              stroke="currentColor"
++              strokeWidth={2}
++            >
++              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
++            </svg>
++          )}
++        </div>
++
++        {/* Card */}
++        <div className="rounded-2xl border border-border-subtle bg-surface p-8 shadow-modal">
++          <h2 className="text-xl font-bold text-text-primary">
++            {isFinal ? 'All done!' : 'Section complete'}
++          </h2>
++          <p className="mt-3 text-sm leading-relaxed text-text-secondary">
++            {isFinal
++              ? 'You have finished all modules. Continue to see your results.'
++              : `Next up: ${nextModuleTitle}. Take a moment to rest — the timer will start when you click below.`}
++          </p>
++          <Button size="lg" className="mt-7 w-full" onClick={onStart}>
++            {isFinal ? 'View my results' : 'Start next module'}
++          </Button>
+         </div>
+-        <h2 className="text-xl font-bold text-text-primary">
+-          {isFinal ? 'All modules complete' : 'Section complete'}
+-        </h2>
+-        <p className="mt-3 text-sm text-text-secondary">
+-          {isFinal
+-            ? 'You have finished all modules. Continue to see your results.'
+-            : `Next up: ${nextModuleTitle}. The timer will start when you begin.`}
+-        </p>
+-        <Button size="lg" className="mt-6" onClick={onStart}>
+-          {isFinal ? 'View results' : 'Start next module'}
+-        </Button>
+       </div>
+     </div>
+   );
+diff --git a/src/components/results/AnswerReviewList.tsx b/src/components/results/AnswerReviewList.tsx
+index bf3602a..9a88b14 100644
+--- a/src/components/results/AnswerReviewList.tsx
++++ b/src/components/results/AnswerReviewList.tsx
+@@ -13,14 +13,20 @@ export interface AnswerReviewListProps {
+ 
+ export function AnswerReviewList({ modules, showExplanations }: AnswerReviewListProps) {
+   return (
+-    <section className="space-y-8">
++    <section className="space-y-10">
+       {modules.map((m) => (
+         <div key={m.moduleId}>
+-          <h2 className="mb-3 text-lg font-semibold text-text-primary">
+-            {m.subject === 'math' ? 'Math' : 'Reading & Writing'} — Module{' '}
+-            {m.moduleNumber}
++          <h2 className="mb-4 flex items-center gap-3 text-base font-semibold text-text-primary">
++            <span className="text-lg">
++              {m.subject === 'math' ? '∑ Math' : '📖 Reading & Writing'}
++            </span>
++            <span className="text-text-muted">—</span>
++            <span>Module {m.moduleNumber}</span>
++            <span className="ml-auto font-mono text-sm font-normal text-text-secondary">
++              {m.correct}/{m.total}
++            </span>
+           </h2>
+-          <ul className="space-y-3">
++          <ul className="space-y-2.5">
+             {m.questions.map((q, idx) => (
+               <QuestionReviewItem
+                 key={q.questionId}
+@@ -49,29 +55,42 @@ function QuestionReviewItem({ question, number, showExplanation }: ItemProps) {
+   return (
+     <li
+       className={clsx(
+-        'overflow-hidden rounded-lg border bg-surface shadow-card',
++        'overflow-hidden rounded-lg border bg-surface',
++        'shadow-card',
+         question.isCorrect
+-          ? 'border-border-subtle border-l-4 border-l-state-success'
+-          : 'border-border-subtle border-l-4 border-l-state-danger'
++          ? 'border-l-4 border-border-subtle border-l-state-success'
++          : 'border-l-4 border-border-subtle border-l-state-danger'
+       )}
+     >
++      {/* Collapsed header — always visible */}
+       <button
+         type="button"
+         onClick={() => setOpen((v) => !v)}
+-        className="flex w-full items-start justify-between gap-4 p-4 text-left transition-colors hover:bg-surface-hover"
++        className="flex w-full items-start justify-between gap-4 px-4 py-3.5 text-left transition-colors hover:bg-surface-hover"
+         aria-expanded={open}
+       >
+         <div className="flex items-start gap-3">
+-          <span className="mt-0.5 font-mono text-sm text-text-muted">
+-            {number}.
++          {/* Correct / wrong icon */}
++          <span
++            className={clsx(
++              'mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-xs font-bold',
++              question.isCorrect
++                ? 'bg-state-success-bg text-state-success'
++                : 'bg-state-danger-bg text-state-danger'
++            )}
++            aria-hidden
++          >
++            {question.isCorrect ? '✓' : '✕'}
+           </span>
+-          <div className="flex-1">
++
++          <div className="flex-1 min-w-0">
++            <span className="mr-2 font-mono text-xs text-text-muted">{number}.</span>
+             {q.stemIsImage && q.stemImage ? (
+               // eslint-disable-next-line @next/next/no-img-element
+               <img
+                 src={q.stemImage}
+                 alt="Question stem"
+-                className="max-h-24 rounded border border-border-default"
++                className="img-frame-review mt-1"
+               />
+             ) : q.stem ? (
+               <KatexRenderer text={q.stem} className="text-sm" />
+@@ -80,86 +99,118 @@ function QuestionReviewItem({ question, number, showExplanation }: ItemProps) {
+             )}
+           </div>
+         </div>
+-        <div className="flex items-center gap-2">
++
++        <div className="flex flex-shrink-0 items-center gap-2">
+           <Badge tone={question.isCorrect ? 'success' : 'danger'}>
+             {question.isCorrect ? 'Correct' : 'Incorrect'}
+           </Badge>
+-          <span className="text-xs text-text-muted" aria-hidden>
+-            {open ? '▾' : '▸'}
++          <span
++            className={clsx(
++              'text-sm text-text-muted transition-transform duration-200',
++              open && 'rotate-90'
++            )}
++            aria-hidden
++          >
++            ›
+           </span>
+         </div>
+       </button>
+ 
++      {/* Expanded body */}
+       {open && (
+-        <div className="border-t border-border-subtle p-4 pt-3 text-sm">
+-          <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+-            <div>
+-              <span className="text-xs uppercase tracking-wide text-text-muted">
++        <div className="border-t border-border-subtle px-4 py-4 text-sm">
++          {/* Answer summary row */}
++          <div className="mb-4 grid grid-cols-2 gap-3">
++            <div className="rounded-md border border-border-subtle bg-surface-alt p-3">
++              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                 Your answer
+-              </span>
+-              <div
++              </p>
++              <p
+                 className={clsx(
+-                  'mt-1 font-mono',
++                  'font-mono text-sm font-medium',
+                   question.isCorrect ? 'text-state-success' : 'text-state-danger'
+                 )}
+               >
+                 {question.studentAnswer ?? '(blank)'}
+-              </div>
++              </p>
+             </div>
+-            <div>
+-              <span className="text-xs uppercase tracking-wide text-text-muted">
++            <div className="rounded-md border border-state-success/20 bg-state-success-bg p-3">
++              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                 Correct answer
+-              </span>
+-              <div className="mt-1 font-mono text-state-success">
++              </p>
++              <p className="font-mono text-sm font-medium text-state-success">
+                 {question.correctAnswer}
+-              </div>
++              </p>
+             </div>
+           </div>
+ 
++          {/* Choices list */}
+           {q.choices && q.choices.length > 0 && (
+-            <div className="mb-3">
+-              <span className="text-xs uppercase tracking-wide text-text-muted">
++            <div className="mb-4">
++              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                 Choices
+-              </span>
+-              <ul className="mt-1 space-y-1">
+-                {q.choices.map((c) => (
+-                  <li key={c.id} className="flex items-start gap-2">
+-                    <span className="font-mono text-xs text-text-secondary">
+-                      {c.id}.
+-                    </span>
+-                    {c.mode === 'text' ? (
+-                      <KatexRenderer text={c.text} as="span" className="text-sm" />
+-                    ) : (
+-                      // eslint-disable-next-line @next/next/no-img-element
+-                      <img
+-                        src={c.imageUrl}
+-                        alt={`Choice ${c.id}`}
+-                        className="max-h-24 rounded"
+-                      />
+-                    )}
+-                  </li>
+-                ))}
++              </p>
++              <ul className="space-y-1.5">
++                {q.choices.map((c) => {
++                  const isCorrect = c.id === question.correctAnswer;
++                  const isStudent = c.id === question.studentAnswer;
++                  return (
++                    <li
++                      key={c.id}
++                      className={clsx(
++                        'flex items-start gap-2.5 rounded-md border px-3 py-2',
++                        isCorrect
++                          ? 'border-state-success/30 bg-state-success-bg'
++                          : isStudent && !isCorrect
++                          ? 'border-state-danger/30 bg-state-danger-bg'
++                          : 'border-border-subtle bg-surface'
++                      )}
++                    >
++                      <span
++                        className={clsx(
++                          'mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full border text-xs font-bold',
++                          isCorrect
++                            ? 'border-state-success bg-state-success text-white'
++                            : isStudent && !isCorrect
++                            ? 'border-state-danger bg-state-danger text-white'
++                            : 'border-border-default text-text-secondary'
++                        )}
++                      >
++                        {c.id}
++                      </span>
++                      {c.mode === 'text' ? (
++                        <KatexRenderer text={c.text} as="span" className="text-sm" />
++                      ) : (
++                        // eslint-disable-next-line @next/next/no-img-element
++                        <img
++                          src={c.imageUrl}
++                          alt={`Choice ${c.id}`}
++                          className="img-frame-review"
++                        />
++                      )}
++                    </li>
++                  );
++                })}
+               </ul>
+             </div>
+           )}
+ 
++          {/* Explanation */}
+           {showExplanation && (question.explanation || question.explanationImage) && (
+-            <div className="rounded-md bg-surface-alt p-3">
+-              <span className="text-xs uppercase tracking-wide text-text-muted">
++            <div className="rounded-md border border-accent/15 bg-accent-subtle/30 p-4">
++              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                 Explanation
+-              </span>
+-              <div className="mt-1">
+-                {q.explanationIsImage && q.explanationImage ? (
+-                  // eslint-disable-next-line @next/next/no-img-element
+-                  <img
+-                    src={q.explanationImage}
+-                    alt="Explanation"
+-                    className="max-w-full rounded border border-border-default"
+-                  />
+-                ) : (
+-                  <KatexRenderer text={question.explanation} className="text-sm" />
+-                )}
+-              </div>
++              </p>
++              {q.explanationIsImage && q.explanationImage ? (
++                // eslint-disable-next-line @next/next/no-img-element
++                <img
++                  src={q.explanationImage}
++                  alt="Explanation"
++                  className="img-frame-review"
++                />
++              ) : (
++                <KatexRenderer text={question.explanation} className="text-sm leading-relaxed" />
++              )}
+             </div>
+           )}
+         </div>
+diff --git a/src/components/results/ResultsContent.tsx b/src/components/results/ResultsContent.tsx
+index 265a53b..0a707e1 100644
+--- a/src/components/results/ResultsContent.tsx
++++ b/src/components/results/ResultsContent.tsx
+@@ -6,6 +6,7 @@ import { ResultsSummary } from './ResultsSummary';
+ import { AnswerReviewList } from './AnswerReviewList';
+ import { PDFDownloadButton } from './PDFDownloadButton';
+ import { Alert } from '@/components/ui/Alert';
++import Link from 'next/link';
+ 
+ export interface ResultsContentProps {
+   results: Results;
+@@ -26,19 +27,26 @@ export function ResultsContent({
+     <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
+       {isPreview && (
+         <Alert tone="warning" title="Preview mode">
+-          This is an admin preview session. It does not appear in dashboard
+-          statistics.
++          This is an admin preview session. It does not appear in dashboard statistics.
+         </Alert>
+       )}
+ 
+-      <div className="flex justify-end">
++      {/* Top action bar */}
++      <div className="flex items-center justify-between">
++        <Link
++          href="/"
++          className="flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-accent"
++        >
++          <span aria-hidden>←</span>
++          Back to test list
++        </Link>
+         <PDFDownloadButton
+           targetRef={printRef}
+           filename={`SAT-Results-${results.completedAt.slice(0, 10)}.pdf`}
+         />
+       </div>
+ 
+-      <div ref={printRef} className="space-y-6 bg-app-bg p-1">
++      <div ref={printRef} className="space-y-6">
+         <ResultsSummary
+           testTitle={results.testTitle}
+           completedAt={results.completedAt}
+@@ -58,15 +66,6 @@ export function ResultsContent({
+           </Alert>
+         )}
+       </div>
+-
+-      <div className="pt-4 text-center">
+-        <a
+-          href="/"
+-          className="text-sm text-text-muted transition-colors hover:text-accent hover:underline"
+-        >
+-          ← Back to test list
+-        </a>
+-      </div>
+     </div>
+   );
+ }
+diff --git a/src/components/results/ResultsSummary.tsx b/src/components/results/ResultsSummary.tsx
+index 6730000..4f46b5d 100644
+--- a/src/components/results/ResultsSummary.tsx
++++ b/src/components/results/ResultsSummary.tsx
+@@ -30,45 +30,88 @@ export function ResultsSummary({
+   const pct =
+     totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+ 
++  const scoreColor =
++    pct >= 80 ? 'text-state-success' : pct >= 60 ? 'text-state-warning' : 'text-state-danger';
++
+   return (
+-    <section className="rounded-lg border border-border-subtle bg-surface p-6 shadow-card">
+-      <header className="mb-6">
+-        <h1 className="text-xl font-bold text-text-primary">{testTitle}</h1>
+-        <p className="mt-1 text-sm text-text-muted">
++    <section className="overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-card">
++      {/* Header band */}
++      <div className="border-b border-border-subtle bg-surface-alt px-6 py-4">
++        <h1 className="text-lg font-bold text-text-primary">{testTitle}</h1>
++        <p className="mt-0.5 text-sm text-text-muted">
+           Completed {formatDate(completedAt)}
+         </p>
+-      </header>
++      </div>
++
++      {/* Score hero */}
++      <div className="flex flex-col items-center gap-1 py-8 text-center">
++        <div className="flex items-baseline gap-2">
++          <span className={`text-5xl font-bold tabular-nums ${scoreColor}`}>
++            {totalCorrect}
++          </span>
++          <span className="text-2xl font-semibold text-text-muted">
++            / {totalQuestions}
++          </span>
++        </div>
++        <p className="mt-1 text-lg font-medium text-text-secondary">
++          {pct}% correct
++        </p>
+ 
+-      <div className="mb-6 flex items-baseline gap-3">
+-        <span className="text-4xl font-bold text-text-primary">
+-          {totalCorrect}
+-          <span className="text-2xl text-text-muted">/{totalQuestions}</span>
+-        </span>
+-        <span className="text-lg text-text-secondary">({pct}%)</span>
++        {/* Score bar */}
++        <div className="mt-4 h-2 w-48 overflow-hidden rounded-full bg-border-subtle">
++          <div
++            className="h-full rounded-full transition-all duration-700"
++            style={{
++              width: `${pct}%`,
++              backgroundColor:
++                pct >= 80 ? '#15803d' : pct >= 60 ? '#b45309' : '#b91c1c',
++            }}
++          />
++        </div>
+       </div>
+ 
+-      <ul className="space-y-2">
+-        {modules.map((m) => {
+-          const modPct = m.total > 0 ? Math.round((m.correct / m.total) * 100) : 0;
+-          const subject = m.subject === 'math' ? 'Math' : 'Reading & Writing';
+-          return (
+-            <li
+-              key={m.moduleId}
+-              className="flex items-center justify-between rounded-md border border-border-subtle bg-surface-alt px-4 py-3"
+-            >
+-              <div className="flex items-center gap-3">
+-                <span className="font-medium text-text-primary">
+-                  {subject} — Module {m.moduleNumber}
+-                </span>
+-                <Badge tone="neutral">{m.difficulty}</Badge>
+-              </div>
+-              <span className="font-mono text-sm text-text-secondary">
+-                {m.correct}/{m.total} ({modPct}%)
+-              </span>
+-            </li>
+-          );
+-        })}
+-      </ul>
++      {/* Per-module breakdown */}
++      <div className="border-t border-border-subtle px-6 py-4">
++        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
++          Breakdown
++        </p>
++        <ul className="space-y-2">
++          {modules.map((m) => {
++            const modPct = m.total > 0 ? Math.round((m.correct / m.total) * 100) : 0;
++            const subject = m.subject === 'math' ? 'Math' : 'Reading & Writing';
++            return (
++              <li
++                key={m.moduleId}
++                className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-alt px-4 py-3"
++              >
++                <div className="flex items-center gap-3">
++                  <span className="font-medium text-text-primary">
++                    {subject} — Module {m.moduleNumber}
++                  </span>
++                  <Badge tone="neutral">{m.difficulty}</Badge>
++                </div>
++                <div className="flex items-center gap-3">
++                  {/* Mini progress bar */}
++                  <div className="hidden h-1.5 w-20 overflow-hidden rounded-full bg-border-subtle sm:block">
++                    <div
++                      className="h-full rounded-full"
++                      style={{
++                        width: `${modPct}%`,
++                        backgroundColor:
++                          modPct >= 80 ? '#15803d' : modPct >= 60 ? '#b45309' : '#b91c1c',
++                      }}
++                    />
++                  </div>
++                  <span className="font-mono text-sm font-medium text-text-primary">
++                    {m.correct}/{m.total}
++                  </span>
++                  <span className="text-sm text-text-muted">({modPct}%)</span>
++                </div>
++              </li>
++            );
++          })}
++        </ul>
++      </div>
+     </section>
+   );
+ }
+diff --git a/src/components/student/StudentDashboardClient.tsx b/src/components/student/StudentDashboardClient.tsx
+index 8f8d647..22d5fb7 100644
+--- a/src/components/student/StudentDashboardClient.tsx
++++ b/src/components/student/StudentDashboardClient.tsx
+@@ -71,52 +71,70 @@ export function StudentDashboardClient({
+     }
+   };
+ 
++  const completedAttempts = attempts.filter((a) => a.score);
+   const avgPct =
+-    attempts.filter((a) => a.score).length > 0
++    completedAttempts.length > 0
+       ? Math.round(
+-          (attempts
+-            .filter((a) => a.score)
+-            .reduce((sum, a) => sum + (a.score!.correct / a.score!.total) * 100, 0) /
+-            attempts.filter((a) => a.score).length) *
+-            1
++          completedAttempts.reduce(
++            (sum, a) => sum + (a.score!.correct / a.score!.total) * 100,
++            0
++          ) / completedAttempts.length
+         )
+       : null;
+ 
+   return (
+     <div className="space-y-10">
+-      <header>
+-        <h1 className="text-2xl font-bold">Welcome back, {name}</h1>
+-        <p className="mt-1 text-sm text-bluebook-muted">
+-          {attempts.length} attempt{attempts.length === 1 ? '' : 's'}
+-          {avgPct != null && ` · ${avgPct}% average`}
+-        </p>
++      {/* Welcome header */}
++      <header className="rounded-xl border border-border-subtle bg-surface p-6 shadow-card">
++        <div className="flex flex-wrap items-center justify-between gap-4">
++          <div>
++            <h1 className="text-xl font-bold text-text-primary">
++              Welcome back, {name}
++            </h1>
++            <p className="mt-1 text-sm text-text-muted">
++              {attempts.length === 0
++                ? 'No attempts yet — pick a test below to start.'
++                : `${attempts.length} attempt${attempts.length === 1 ? '' : 's'}${
++                    avgPct != null ? ` · ${avgPct}% average score` : ''
++                  }`}
++            </p>
++          </div>
++          {avgPct != null && (
++            <div className="flex flex-col items-center rounded-lg border border-border-subtle bg-surface-alt px-6 py-3 text-center">
++              <span className="text-2xl font-bold text-text-primary">{avgPct}%</span>
++              <span className="text-xs text-text-muted">avg score</span>
++            </div>
++          )}
++        </div>
+       </header>
+ 
+       {/* Available tests */}
+       <section>
+-        <h2 className="mb-3 text-lg font-semibold">Available tests</h2>
++        <h2 className="mb-4 text-base font-semibold text-text-primary">Available tests</h2>
+         {tests.length === 0 ? (
+-          <Alert tone="info">No tests are published yet.</Alert>
++          <Alert tone="info">No tests are published yet. Check back later.</Alert>
+         ) : (
+           <ul className="grid gap-3 sm:grid-cols-2">
+             {tests.map((t) => (
+               <li
+                 key={t.id}
+-                className="flex flex-col justify-between rounded-lg border border-bluebook-border bg-white p-4 shadow-card"
++                className="flex flex-col justify-between rounded-lg border border-border-subtle bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
+               >
+                 <div>
+-                  <div className="text-base font-semibold">{t.title}</div>
++                  <div className="text-base font-semibold text-text-primary">{t.title}</div>
+                   {t.description && (
+-                    <p className="mt-1 text-sm text-bluebook-muted">{t.description}</p>
++                    <p className="mt-1 text-sm text-text-secondary">{t.description}</p>
+                   )}
+-                  <div className="mt-2">
++                  <div className="mt-3">
+                     <Badge tone="accent">
+                       {t.moduleCount} module{t.moduleCount === 1 ? '' : 's'}
+                     </Badge>
+                   </div>
+                 </div>
+-                <div className="mt-4">
+-                  <Button onClick={() => openModal(t)}>Start test</Button>
++                <div className="mt-5">
++                  <Button onClick={() => openModal(t)} className="w-full">
++                    Start test
++                  </Button>
+                 </div>
+               </li>
+             ))}
+@@ -126,61 +144,69 @@ export function StudentDashboardClient({
+ 
+       {/* Past attempts */}
+       <section>
+-        <h2 className="mb-3 text-lg font-semibold">Your attempts</h2>
++        <h2 className="mb-4 text-base font-semibold text-text-primary">Your attempts</h2>
+         {attempts.length === 0 ? (
+-          <div className="rounded-lg border border-bluebook-border bg-white p-6 text-center text-sm text-bluebook-muted">
++          <div className="rounded-lg border border-border-subtle bg-surface p-8 text-center text-sm text-text-muted">
+             No attempts yet. Pick a test above to get started.
+           </div>
+         ) : (
+-          <ul className="divide-y divide-bluebook-border overflow-hidden rounded-lg border border-bluebook-border bg-white">
+-            {attempts.map((a) => {
+-              const pct =
+-                a.score != null
+-                  ? Math.round((a.score.correct / a.score.total) * 100)
+-                  : null;
+-              return (
+-                <li
+-                  key={a.id}
+-                  className="flex items-center justify-between gap-4 px-4 py-3"
+-                >
+-                  <div className="min-w-0">
+-                    <div className="truncate text-sm font-medium">{a.testTitle}</div>
+-                    <div className="mt-0.5 text-xs text-bluebook-muted">
+-                      {new Date(a.startedAt).toLocaleString()}
++          <div className="overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-card">
++            <ul className="divide-y divide-border-subtle">
++              {attempts.map((a) => {
++                const pct =
++                  a.score != null
++                    ? Math.round((a.score.correct / a.score.total) * 100)
++                    : null;
++                return (
++                  <li
++                    key={a.id}
++                    className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-surface-hover"
++                  >
++                    <div className="min-w-0">
++                      <div className="truncate text-sm font-medium text-text-primary">
++                        {a.testTitle}
++                      </div>
++                      <div className="mt-0.5 text-xs text-text-muted">
++                        {new Date(a.startedAt).toLocaleString(undefined, {
++                          dateStyle: 'medium',
++                          timeStyle: 'short',
++                        })}
++                      </div>
+                     </div>
+-                  </div>
+-                  <div className="flex items-center gap-3">
+-                    {a.score ? (
+-                      <span className="font-mono text-sm">
+-                        {a.score.correct}/{a.score.total}
+-                        <span className="ml-1 text-bluebook-muted">({pct}%)</span>
+-                      </span>
+-                    ) : (
+-                      <span className="text-xs text-bluebook-muted">in progress</span>
+-                    )}
+-                    <Badge tone={a.status === 'completed' ? 'success' : 'warning'}>
+-                      {a.status}
+-                    </Badge>
+-                    {a.status === 'completed' && (
+-                      <Link
+-                        href={`/results/${a.id}`}
+-                        className="text-xs text-bluebook-accent hover:underline"
+-                      >
+-                        Review
+-                      </Link>
+-                    )}
+-                  </div>
+-                </li>
+-              );
+-            })}
+-          </ul>
++                    <div className="flex flex-shrink-0 items-center gap-3">
++                      {a.score ? (
++                        <span className="font-mono text-sm text-text-primary">
++                          {a.score.correct}/{a.score.total}
++                          <span className="ml-1 text-text-muted">({pct}%)</span>
++                        </span>
++                      ) : (
++                        <span className="text-xs text-text-muted">in progress</span>
++                      )}
++                      <Badge tone={a.status === 'completed' ? 'success' : 'warning'}>
++                        {a.status}
++                      </Badge>
++                      {a.status === 'completed' && (
++                        <Link
++                          href={`/results/${a.id}`}
++                          className="text-xs font-medium text-accent hover:underline"
++                        >
++                          Review
++                        </Link>
++                      )}
++                    </div>
++                  </li>
++                );
++              })}
++            </ul>
++          </div>
+         )}
+       </section>
+ 
++      {/* Start test modal */}
+       <Modal
+         open={activeTest != null}
+         onClose={closeModal}
+-        title={activeTest ? `Start "${activeTest.title}"?` : ''}
++        title={activeTest ? `Start "${activeTest.title}"` : ''}
+         footer={
+           <>
+             <Button variant="secondary" onClick={closeModal} disabled={busy}>
+@@ -193,7 +219,7 @@ export function StudentDashboardClient({
+         }
+       >
+         <div className="space-y-3">
+-          <p className="text-sm text-bluebook-muted">
++          <p className="text-sm text-text-secondary">
+             Enter the test password provided by your instructor. The timer starts
+             as soon as you begin.
+           </p>
+@@ -207,7 +233,7 @@ export function StudentDashboardClient({
+             }}
+             placeholder="Test password"
+             autoFocus
+-            className="h-10 w-full rounded-md border border-bluebook-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </div>
+       </Modal>
+diff --git a/src/components/student/StudentNav.tsx b/src/components/student/StudentNav.tsx
+index 545146c..2283ff1 100644
+--- a/src/components/student/StudentNav.tsx
++++ b/src/components/student/StudentNav.tsx
+@@ -25,14 +25,15 @@ export function StudentNav({ name }: StudentNavProps) {
+ 
+   return (
+     <div className="flex items-center gap-3">
+-      <span className="hidden text-sm text-bluebook-muted sm:inline">
+-        Hi, <strong className="text-bluebook-text">{name}</strong>
++      <span className="hidden text-sm text-text-muted sm:inline">
++        Hi,{' '}
++        <strong className="font-semibold text-text-primary">{name}</strong>
+       </span>
+       <button
+         type="button"
+         onClick={logout}
+         disabled={busy}
+-        className="rounded-md border border-bluebook-border px-3 py-1.5 text-sm hover:bg-bluebook-bg disabled:opacity-50"
++        className="rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary disabled:opacity-50"
+       >
+         {busy ? 'Signing out…' : 'Sign out'}
+       </button>
+-- 
+2.43.0
+

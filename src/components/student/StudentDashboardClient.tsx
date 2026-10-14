@@ -71,52 +71,70 @@ export function StudentDashboardClient({
     }
   };
 
+  const completedAttempts = attempts.filter((a) => a.score);
   const avgPct =
-    attempts.filter((a) => a.score).length > 0
+    completedAttempts.length > 0
       ? Math.round(
-          (attempts
-            .filter((a) => a.score)
-            .reduce((sum, a) => sum + (a.score!.correct / a.score!.total) * 100, 0) /
-            attempts.filter((a) => a.score).length) *
-            1
+          completedAttempts.reduce(
+            (sum, a) => sum + (a.score!.correct / a.score!.total) * 100,
+            0
+          ) / completedAttempts.length
         )
       : null;
 
   return (
     <div className="space-y-10">
-      <header>
-        <h1 className="text-2xl font-bold">Welcome back, {name}</h1>
-        <p className="mt-1 text-sm text-bluebook-muted">
-          {attempts.length} attempt{attempts.length === 1 ? '' : 's'}
-          {avgPct != null && ` · ${avgPct}% average`}
-        </p>
+      {/* Welcome header */}
+      <header className="rounded-xl border border-border-subtle bg-surface p-6 shadow-card">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-text-primary">
+              Welcome back, {name}
+            </h1>
+            <p className="mt-1 text-sm text-text-muted">
+              {attempts.length === 0
+                ? 'No attempts yet — pick a test below to start.'
+                : `${attempts.length} attempt${attempts.length === 1 ? '' : 's'}${
+                    avgPct != null ? ` · ${avgPct}% average score` : ''
+                  }`}
+            </p>
+          </div>
+          {avgPct != null && (
+            <div className="flex flex-col items-center rounded-lg border border-border-subtle bg-surface-alt px-6 py-3 text-center">
+              <span className="text-2xl font-bold text-text-primary">{avgPct}%</span>
+              <span className="text-xs text-text-muted">avg score</span>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Available tests */}
       <section>
-        <h2 className="mb-3 text-lg font-semibold">Available tests</h2>
+        <h2 className="mb-4 text-base font-semibold text-text-primary">Available tests</h2>
         {tests.length === 0 ? (
-          <Alert tone="info">No tests are published yet.</Alert>
+          <Alert tone="info">No tests are published yet. Check back later.</Alert>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {tests.map((t) => (
               <li
                 key={t.id}
-                className="flex flex-col justify-between rounded-lg border border-bluebook-border bg-white p-4 shadow-card"
+                className="flex flex-col justify-between rounded-lg border border-border-subtle bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
               >
                 <div>
-                  <div className="text-base font-semibold">{t.title}</div>
+                  <div className="text-base font-semibold text-text-primary">{t.title}</div>
                   {t.description && (
-                    <p className="mt-1 text-sm text-bluebook-muted">{t.description}</p>
+                    <p className="mt-1 text-sm text-text-secondary">{t.description}</p>
                   )}
-                  <div className="mt-2">
+                  <div className="mt-3">
                     <Badge tone="accent">
                       {t.moduleCount} module{t.moduleCount === 1 ? '' : 's'}
                     </Badge>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <Button onClick={() => openModal(t)}>Start test</Button>
+                <div className="mt-5">
+                  <Button onClick={() => openModal(t)} className="w-full">
+                    Start test
+                  </Button>
                 </div>
               </li>
             ))}
@@ -126,61 +144,69 @@ export function StudentDashboardClient({
 
       {/* Past attempts */}
       <section>
-        <h2 className="mb-3 text-lg font-semibold">Your attempts</h2>
+        <h2 className="mb-4 text-base font-semibold text-text-primary">Your attempts</h2>
         {attempts.length === 0 ? (
-          <div className="rounded-lg border border-bluebook-border bg-white p-6 text-center text-sm text-bluebook-muted">
+          <div className="rounded-lg border border-border-subtle bg-surface p-8 text-center text-sm text-text-muted">
             No attempts yet. Pick a test above to get started.
           </div>
         ) : (
-          <ul className="divide-y divide-bluebook-border overflow-hidden rounded-lg border border-bluebook-border bg-white">
-            {attempts.map((a) => {
-              const pct =
-                a.score != null
-                  ? Math.round((a.score.correct / a.score.total) * 100)
-                  : null;
-              return (
-                <li
-                  key={a.id}
-                  className="flex items-center justify-between gap-4 px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{a.testTitle}</div>
-                    <div className="mt-0.5 text-xs text-bluebook-muted">
-                      {new Date(a.startedAt).toLocaleString()}
+          <div className="overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-card">
+            <ul className="divide-y divide-border-subtle">
+              {attempts.map((a) => {
+                const pct =
+                  a.score != null
+                    ? Math.round((a.score.correct / a.score.total) * 100)
+                    : null;
+                return (
+                  <li
+                    key={a.id}
+                    className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-surface-hover"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-text-primary">
+                        {a.testTitle}
+                      </div>
+                      <div className="mt-0.5 text-xs text-text-muted">
+                        {new Date(a.startedAt).toLocaleString(undefined, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {a.score ? (
-                      <span className="font-mono text-sm">
-                        {a.score.correct}/{a.score.total}
-                        <span className="ml-1 text-bluebook-muted">({pct}%)</span>
-                      </span>
-                    ) : (
-                      <span className="text-xs text-bluebook-muted">in progress</span>
-                    )}
-                    <Badge tone={a.status === 'completed' ? 'success' : 'warning'}>
-                      {a.status}
-                    </Badge>
-                    {a.status === 'completed' && (
-                      <Link
-                        href={`/results/${a.id}`}
-                        className="text-xs text-bluebook-accent hover:underline"
-                      >
-                        Review
-                      </Link>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                    <div className="flex flex-shrink-0 items-center gap-3">
+                      {a.score ? (
+                        <span className="font-mono text-sm text-text-primary">
+                          {a.score.correct}/{a.score.total}
+                          <span className="ml-1 text-text-muted">({pct}%)</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs text-text-muted">in progress</span>
+                      )}
+                      <Badge tone={a.status === 'completed' ? 'success' : 'warning'}>
+                        {a.status}
+                      </Badge>
+                      {a.status === 'completed' && (
+                        <Link
+                          href={`/results/${a.id}`}
+                          className="text-xs font-medium text-accent hover:underline"
+                        >
+                          Review
+                        </Link>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         )}
       </section>
 
+      {/* Start test modal */}
       <Modal
         open={activeTest != null}
         onClose={closeModal}
-        title={activeTest ? `Start "${activeTest.title}"?` : ''}
+        title={activeTest ? `Start "${activeTest.title}"` : ''}
         footer={
           <>
             <Button variant="secondary" onClick={closeModal} disabled={busy}>
@@ -193,7 +219,7 @@ export function StudentDashboardClient({
         }
       >
         <div className="space-y-3">
-          <p className="text-sm text-bluebook-muted">
+          <p className="text-sm text-text-secondary">
             Enter the test password provided by your instructor. The timer starts
             as soon as you begin.
           </p>
@@ -207,7 +233,7 @@ export function StudentDashboardClient({
             }}
             placeholder="Test password"
             autoFocus
-            className="h-10 w-full rounded-md border border-bluebook-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </div>
       </Modal>

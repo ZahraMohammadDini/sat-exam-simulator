@@ -15,12 +15,14 @@ export default async function AuthedStudentLayout({
   if (!student) redirect('/student');
 
   return (
-    <div className="min-h-screen bg-bluebook-bg">
-      <header className="border-b border-bluebook-border bg-white">
+    <div className="min-h-screen bg-app-bg">
+      <header className="sticky top-0 z-10 border-b border-border-subtle bg-surface shadow-card">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <Link href="/student/dashboard" className="flex items-center gap-2">
-            <span className="text-base font-bold">SAT Prep</span>
-            <span className="text-xs text-bluebook-muted">Student</span>
+            <span className="text-sm font-bold text-text-primary">SAT Prep</span>
+            <span className="rounded-sm bg-accent-subtle px-1.5 py-0.5 text-xs font-medium text-accent">
+              Student
+            </span>
           </Link>
           <StudentNav name={student.name ?? student.username ?? 'Student'} />
         </div>
