@@ -5,7 +5,6 @@ import { verifyPasswordSchema, formatZodError } from '@/lib/validation';
 
 export const runtime = 'nodejs';
 
-// Best-effort in-memory rate limiter (per serverless instance)
 const attempts = new Map<string, number[]>();
 const WINDOW_MS = 60_000;
 const MAX_ATTEMPTS = 10;

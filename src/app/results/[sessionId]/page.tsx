@@ -7,6 +7,12 @@ interface PageProps {
   params: { sessionId: string };
 }
 
+interface ResultsShape {
+  totalCorrect?: number;
+  totalQuestions?: number;
+  testTitle?: string;
+}
+
 export default async function ResultsPage({ params }: PageProps) {
   const session = await prisma.testSession.findUnique({
     where: { id: params.sessionId },
@@ -18,7 +24,7 @@ export default async function ResultsPage({ params }: PageProps) {
     redirect(`/test/${session.id}`);
   }
 
-  const results = session.results as { totalCorrect?: number; totalQuestions?: number } | null;
+  const results = session.results as unknown as ResultsShape | null;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">

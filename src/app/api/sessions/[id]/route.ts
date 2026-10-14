@@ -34,10 +34,16 @@ export async function PUT(
   });
 
   if (!session) {
-    return NextResponse.json({ ok: false, error: 'Session not found' }, { status: 404 });
+    return NextResponse.json(
+      { ok: false, error: 'Session not found' },
+      { status: 404 }
+    );
   }
   if (session.status !== 'active') {
-    return NextResponse.json({ ok: false, error: 'Session already completed' }, { status: 409 });
+    return NextResponse.json(
+      { ok: false, error: 'Session already completed' },
+      { status: 409 }
+    );
   }
 
   const mod = readModuleState(session.answers, moduleId);
@@ -57,7 +63,7 @@ export async function PUT(
 
   const nextTime: Record<string, unknown> =
     session.timeRemaining != null && typeof session.timeRemaining === 'object'
-      ? { ...(session.timeRemaining as Record<string, unknown>) }
+      ? { ...(session.timeRemaining as unknown as Record<string, unknown>) }
       : {};
   if (timeRemaining !== undefined) {
     nextTime[moduleId] = timeRemaining;

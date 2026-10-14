@@ -49,21 +49,29 @@ export async function POST(
   });
 
   if (!session) {
-    return NextResponse.json({ ok: false, error: 'Session not found' }, { status: 404 });
+    return NextResponse.json(
+      { ok: false, error: 'Session not found' },
+      { status: 404 }
+    );
   }
   if (session.status !== 'active') {
-    return NextResponse.json({ ok: false, error: 'Session already completed' }, { status: 409 });
+    return NextResponse.json(
+      { ok: false, error: 'Session already completed' },
+      { status: 409 }
+    );
   }
 
   const modules = session.test.modules;
   const moduleIndex = modules.findIndex((m) => m.id === moduleId);
   if (moduleIndex < 0) {
-    return NextResponse.json({ ok: false, error: 'Module not in test' }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: 'Module not in test' },
+      { status: 400 }
+    );
   }
 
   const currentModule = modules[moduleIndex];
 
-  // Guard: student can only submit the module they're currently on
   if (moduleIndex !== session.currentModuleIndex) {
     return NextResponse.json(
       { ok: false, error: 'Not the current module' },
@@ -71,7 +79,6 @@ export async function POST(
     );
   }
 
-  // ── Grade ────────────────────────────────────────────────────
   const mod = readModuleState(session.answers, moduleId);
   const gradable = currentModule.questions.map((tmq) => ({
     id: tmq.question.id,
@@ -80,9 +87,8 @@ export async function POST(
   }));
   const graded = gradeModule(mod.answers, gradable);
 
-  // ── Adaptive routing (only after module 1) ───────────────────
-  const routing = Array.isArray(session.routing)
-    ? [...(session.routing as unknown[])]
+  const routing: unknown[] = Array.isArray(session.routing)
+    ? [...(session.routing as unknown as unknown[])]
     : [];
 
   let nextModuleId: string | null = null;
@@ -107,7 +113,6 @@ export async function POST(
     const match = modules.find(
       (m) => m.moduleNumber === 2 && m.difficulty === routedTo
     );
-    // Fall back to the only module 2 if no exact-difficulty match
     const fallback = modules.find((m) => m.moduleNumber === 2);
     nextModuleId = (match ?? fallback)?.id ?? null;
   } else if (moduleIndex < modules.length - 1) {

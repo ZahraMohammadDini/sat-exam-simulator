@@ -65,9 +65,9 @@ export default async function TestPage({ params }: PageProps) {
     id: session.id,
     testId: session.testId,
     currentModuleIndex: session.currentModuleIndex,
-    answers: (session.answers as SessionModuleAnswers) ?? {},
-    timeRemaining: (session.timeRemaining as SessionTimeRemaining) ?? {},
-    routing: (session.routing as RoutingEntry[]) ?? [],
+    answers: (session.answers as unknown as SessionModuleAnswers) ?? {},
+    timeRemaining: (session.timeRemaining as unknown as SessionTimeRemaining) ?? {},
+    routing: (session.routing as unknown as RoutingEntry[]) ?? [],
     status: 'active',
     isPreview: session.isPreview,
   };
