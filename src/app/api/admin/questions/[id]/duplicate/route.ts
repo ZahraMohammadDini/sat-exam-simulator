@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin, unauthorized } from '@/lib/auth';
+import { jsonOrDbNull } from '@/lib/serialize';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +31,7 @@ export async function POST(
       stem: source.stem,
       stemImage: source.stemImage,
       stemIsImage: source.stemIsImage,
-      choices: source.choices as object | undefined,
+      choices: source.choices != null ? jsonOrDbNull(source.choices) : undefined,
       correctAnswer: source.correctAnswer,
       explanation: source.explanation,
       explanationImage: source.explanationImage,

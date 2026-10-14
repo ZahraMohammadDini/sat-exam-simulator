@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { requireAdmin, unauthorized } from '@/lib/auth';
 import { importPayloadSchema, formatZodError } from '@/lib/validation';
+import { jsonOrDbNull } from '@/lib/serialize';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -95,7 +96,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
   }
 
-  // The import accepts a password alongside the JSON payload
   const wrapper = body as { password?: string; payload?: unknown };
   if (!wrapper.password || typeof wrapper.password !== 'string') {
     return NextResponse.json(
@@ -142,6 +142,7 @@ export async function POST(request: Request) {
         },
       });
 
+      let orderIndex = 0;
       for (const q of mod.questions) {
         const newQ = await tx.question.create({
           data: {
@@ -156,7 +157,7 @@ export async function POST(request: Request) {
             stem: q.stem ?? null,
             stemImage: q.stemImage ?? null,
             stemIsImage: q.stemIsImage,
-            choices: q.choices ?? null,
+            choices: q.choices ? jsonOrDbNull(q.choices) : undefined,
             correctAnswer: q.correctAnswer,
             explanation: q.explanation ?? null,
             explanationImage: q.explanationImage ?? null,
@@ -169,7 +170,7 @@ export async function POST(request: Request) {
           data: {
             moduleId: newMod.id,
             questionId: newQ.id,
-            order: 0,
+            order: orderIndex++,
           },
         });
       }

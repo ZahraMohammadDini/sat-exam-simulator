@@ -87,3 +87,14 @@ export function writeModuleState(
   all[moduleId] = state;
   return all;
 }
+// ── Prisma JSON field helpers ────────────────────────────────────
+// Prisma's Json columns reject plain `null`. To store SQL NULL,
+// use Prisma.DbNull; to store the JSON literal null, use Prisma.JsonNull.
+import { Prisma } from '@prisma/client';
+
+export function jsonOrDbNull(
+  value: unknown
+): Prisma.InputJsonValue | typeof Prisma.DbNull {
+  if (value == null) return Prisma.DbNull;
+  return value as Prisma.InputJsonValue;
+}

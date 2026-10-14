@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin, unauthorized } from '@/lib/auth';
 import { questionInputSchema, formatZodError } from '@/lib/validation';
+import { jsonOrDbNull } from '@/lib/serialize';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
       stem: data.stem ?? null,
       stemImage: data.stemImage ?? null,
       stemIsImage: data.stemIsImage,
-      choices: data.choices ?? null,
+      choices: data.choices ? jsonOrDbNull(data.choices) : undefined,
       correctAnswer: data.correctAnswer,
       explanation: data.explanation ?? null,
       explanationImage: data.explanationImage ?? null,
