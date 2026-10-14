@@ -6,7 +6,9 @@ import type {
   TestStructure,
   SessionState,
   SessionModuleAnswers,
+  SessionModuleState,
   SessionTimeRemaining,
+  PublicQuestion,
 } from '@/types';
 import { installCopyPrevention } from '@/lib/copy-prevention';
 import { Button } from '@/components/ui/Button';
@@ -27,13 +29,24 @@ interface BreakState {
   isFinal: boolean;
 }
 
+const EMPTY_MODULE_STATE: SessionModuleState = { answers: {}, flagged: [] };
+
+function getModuleState(
+  all: SessionModuleAnswers,
+  moduleId: string
+): SessionModuleState {
+  return all[moduleId] ?? EMPTY_MODULE_STATE;
+}
+
 export function ExamShell({ test, session }: ExamShellProps) {
   const router = useRouter();
 
   const [currentModuleIndex, setCurrentModuleIndex] = useState(session.currentModuleIndex);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<SessionModuleAnswers>(session.answers);
-  const [timeRemaining, setTimeRemaining] = useState<SessionTimeRemaining>(session.timeRemaining);
+  const [timeRemaining, setTimeRemaining] = useState<SessionTimeRemaining>(
+    session.timeRemaining
+  );
   const [strikethrough, setStrikethrough] = useState<Record<string, string[]>>({});
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
@@ -60,18 +73,22 @@ export function ExamShell({ test, session }: ExamShellProps) {
     });
   }, [currentModule]);
 
-  const moduleAnswerMap = useMemo<Record<string, string | null>>(() => {
-    if (!currentModule) return {};
-    return answers[currentModule.id] ?? {};
+  const moduleState = useMemo<SessionModuleState>(() => {
+    if (!currentModule) return EMPTY_MODULE_STATE;
+    return getModuleState(answers, currentModule.id);
   }, [answers, currentModule]);
 
-  const flaggedSet = useMemo<Set<string>>(() => {
-    const raw = (moduleAnswerMap as { __flagged?: string[] }).__flagged ?? [];
-    return new Set(raw);
-  }, [moduleAnswerMap]);
+  const moduleAnswerMap = moduleState.answers;
+  const flaggedSet = useMemo<Set<string>>(
+    () => new Set(moduleState.flagged),
+    [moduleState.flagged]
+  );
 
-  const currentQuestion = currentModule?.questions[currentQuestionIndex];
-  const currentSelected = currentQuestion ? moduleAnswerMap[currentQuestion.id] ?? null : null;
+  const currentQuestion: PublicQuestion | undefined =
+    currentModule?.questions[currentQuestionIndex];
+  const currentSelected = currentQuestion
+    ? moduleAnswerMap[currentQuestion.id] ?? null
+    : null;
   const currentStrike = currentQuestion ? strikethrough[currentQuestion.id] ?? [] : [];
   const currentFlagged = currentQuestion ? flaggedSet.has(currentQuestion.id) : false;
   const unansweredCount = useMemo(() => {
@@ -119,13 +136,16 @@ export function ExamShell({ test, session }: ExamShellProps) {
   // ── Handlers ──────────────────────────────────────────────────
   const handleAnswer = (value: string | null) => {
     if (!currentModule || !currentQuestion) return;
-    setAnswers((prev) => ({
-      ...prev,
-      [currentModule.id]: {
-        ...(prev[currentModule.id] ?? {}),
-        [currentQuestion.id]: value,
-      },
-    }));
+    setAnswers((prev) => {
+      const mod = getModuleState(prev, currentModule.id);
+      return {
+        ...prev,
+        [currentModule.id]: {
+          ...mod,
+          answers: { ...mod.answers, [currentQuestion.id]: value },
+        },
+      };
+    });
     void saveModule({ questionId: currentQuestion.id, answer: value });
   };
 
@@ -133,13 +153,13 @@ export function ExamShell({ test, session }: ExamShellProps) {
     if (!currentModule || !currentQuestion) return;
     const nowFlagged = !flaggedSet.has(currentQuestion.id);
     setAnswers((prev) => {
-      const mod = prev[currentModule.id] ?? {};
-      const flags = new Set(mod.__flagged ?? []);
+      const mod = getModuleState(prev, currentModule.id);
+      const flags = new Set(mod.flagged);
       if (nowFlagged) flags.add(currentQuestion.id);
       else flags.delete(currentQuestion.id);
       return {
         ...prev,
-        [currentModule.id]: { ...mod, __flagged: Array.from(flags) },
+        [currentModule.id]: { ...mod, flagged: Array.from(flags) },
       };
     });
     void saveModule({ questionId: currentQuestion.id, flagged: nowFlagged });
@@ -168,24 +188,29 @@ export function ExamShell({ test, session }: ExamShellProps) {
       const json = (await res.json()) as
         | { ok: true; data: { nextModuleId: string | null; isLast: boolean } }
         | { ok: false; error: string };
-      if (!res.ok || !json.ok) throw new Error(json.ok ? 'Submit failed' : json.error);
+      if (!res.ok || !json.ok) {
+        throw new Error(json.ok ? 'Submit failed' : json.error);
+      }
 
       setConfirmOpen(false);
 
       if (json.data.isLast || !json.data.nextModuleId) {
-        // Final module — complete the session
         const cres = await fetch(`/api/sessions/${session.id}/complete`, {
           method: 'POST',
         });
         const cjson = (await cres.json()) as
           | { ok: true; data: { sessionId: string } }
           | { ok: false; error: string };
-        if (!cres.ok || !cjson.ok) throw new Error(cjson.ok ? 'Complete failed' : cjson.error);
+        if (!cres.ok || !cjson.ok) {
+          throw new Error(cjson.ok ? 'Complete failed' : cjson.error);
+        }
         router.push(`/results/${session.id}`);
         return;
       }
 
-      const nextIdx = test.modules.findIndex((m) => m.id === json.data.nextModuleId);
+      const nextIdx = test.modules.findIndex(
+        (m) => m.id === json.data.nextModuleId
+      );
       if (nextIdx < 0) throw new Error('Next module not found');
       setBreakState({ nextModuleIndex: nextIdx, isFinal: false });
     } catch (err) {
@@ -224,7 +249,8 @@ export function ExamShell({ test, session }: ExamShellProps) {
     );
   }
 
-  const secondsRemaining = timeRemaining[currentModule.id] ?? currentModule.timeLimitSeconds;
+  const secondsRemaining =
+    timeRemaining[currentModule.id] ?? currentModule.timeLimitSeconds;
   const showCalculator = currentModule.subject === 'math';
 
   return (
@@ -313,7 +339,6 @@ export function ExamShell({ test, session }: ExamShellProps) {
         </aside>
       </div>
 
-      {/* Mobile navigator panel */}
       {navigatorOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <div

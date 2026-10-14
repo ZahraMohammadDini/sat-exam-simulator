@@ -108,12 +108,17 @@ export interface TestStructure {
 
 // ── Session types ────────────────────────────────────────────────
 
-export interface SessionAnswerState {
+export interface SessionAnswerMap {
   [questionId: string]: string | null;
 }
 
+export interface SessionModuleState {
+  answers: SessionAnswerMap;
+  flagged: string[];
+}
+
 export interface SessionModuleAnswers {
-  [moduleId: string]: SessionAnswerState & { __flagged?: string[] };
+  [moduleId: string]: SessionModuleState;
 }
 
 export interface SessionTimeRemaining {
