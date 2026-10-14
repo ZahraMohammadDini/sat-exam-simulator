@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
+import { getStudentSession } from '@/lib/auth';
 import { verifyPasswordSchema, formatZodError } from '@/lib/validation';
 
 export const runtime = 'nodejs';
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
 
     const test = await prisma.test.findUnique({
       where: { id: testId },
-      select: { id: true, passwordHash: true, isPublished: true, title: true },
+      select: { id: true, passwordHash: true, isPublished: true },
     });
 
     if (!test || !test.isPublished) {
@@ -71,9 +72,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Link to student if signed in
+    const studentSession = await getStudentSession();
+    const studentId = studentSession.studentId ?? null;
+
     const session = await prisma.testSession.create({
       data: {
         testId: test.id,
+        studentId,
         answers: {},
         timeRemaining: {},
         routing: [],
@@ -84,7 +90,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, data: { sessionId: session.id } });
   } catch (err) {
-    console.error('[verify]', err);
+    console.error('[tests/verify]', err);
     return NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : 'Server error' },
       { status: 500 }

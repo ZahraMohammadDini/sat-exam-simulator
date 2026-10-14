@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────────
-// SAT Exam Simulator — Prisma schema
-// ─────────────────────────────────────────────────────────────────
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,6 +16,22 @@ model Admin {
   username     String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Student
+// ─────────────────────────────────────────────────────────────────
+model Student {
+  id           String        @id @default(cuid())
+  username     String        @unique
+  name         String
+  passwordHash String
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  sessions     TestSession[]
+
+  @@index([isActive])
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -49,13 +61,13 @@ model TestModule {
   id                String                @id @default(cuid())
   testId            String
   test              Test                  @relation(fields: [testId], references: [id], onDelete: Cascade)
-  subject           String                // "reading_writing" | "math"
-  moduleNumber      Int                   // 1 | 2
-  difficulty        String                @default("standard") // "standard" | "easy" | "hard"
+  subject           String
+  moduleNumber      Int
+  difficulty        String                @default("standard")
   timeLimitSeconds  Int
   order             Int
-  adaptiveThreshold Int?                  // only on module 1
-  routesTo          String?               // "easy" | "hard" — only on module 1
+  adaptiveThreshold Int?
+  routesTo          String?
   questions         TestModuleQuestion[]
   createdAt         DateTime              @default(now())
 
@@ -67,28 +79,23 @@ model TestModule {
 // ─────────────────────────────────────────────────────────────────
 model Question {
   id         String   @id @default(cuid())
-  subject    String   // "reading_writing" | "math"
-  type       String   // "multiple_choice" | "grid_in"
+  subject    String
+  type       String
   difficulty String   @default("medium")
   domain     String?
   tags       String[]
 
-  // Passage (optional, one of text/image)
   passage        String?
   passageImage   String?
   passageIsImage Boolean @default(false)
 
-  // Stem (required, one of text/image)
   stem        String?
   stemImage   String?
   stemIsImage Boolean @default(false)
 
-  // Choices (MC only). Shape:
-  // [{ id:"A", mode:"text"|"image", text?:string, imageUrl?:string }, ...]
   choices       Json?
   correctAnswer String
 
-  // Explanation (optional, one of text/image)
   explanation        String?
   explanationImage   String?
   explanationIsImage Boolean @default(false)
@@ -103,7 +110,7 @@ model Question {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// TestModuleQuestion (join table with ordering)
+// TestModuleQuestion
 // ─────────────────────────────────────────────────────────────────
 model TestModuleQuestion {
   id         String     @id @default(cuid())
@@ -124,22 +131,20 @@ model TestSession {
   id                 String    @id @default(cuid())
   testId             String
   test               Test      @relation(fields: [testId], references: [id])
+  studentId          String?
+  student            Student?  @relation(fields: [studentId], references: [id], onDelete: SetNull)
   startedAt          DateTime  @default(now())
   completedAt        DateTime?
   currentModuleIndex Int       @default(0)
-
-  // { [moduleId]: { [questionId]: "A" | "3.5" | null, __flagged?: string[] } }
   answers            Json      @default("{}")
-  // { [moduleId]: secondsRemaining }
   timeRemaining      Json      @default("{}")
-  // [{ moduleId, correct, total, routedTo }]
   routing            Json      @default("[]")
-  // Final results written on complete
   results            Json?
-  status             String    @default("active") // "active" | "completed"
+  status             String    @default("active")
   isPreview          Boolean   @default(false)
 
   @@index([testId])
   @@index([testId, isPreview])
   @@index([status, isPreview])
+  @@index([studentId, startedAt])
 }

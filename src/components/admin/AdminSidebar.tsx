@@ -20,6 +20,7 @@ const NAV: NavItem[] = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: '▤' },
   { href: '/admin/tests', label: 'Tests', icon: '☰' },
   { href: '/admin/questions', label: 'Question Bank', icon: '?' },
+  { href: '/admin/students', label: 'Students', icon: '☺' },
   { href: '/admin/import-export', label: 'Import / Export', icon: '⇅' },
 ];
 
