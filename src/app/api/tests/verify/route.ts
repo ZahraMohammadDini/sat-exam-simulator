@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { verifyPasswordSchema, formatZodError } from '@/lib/validation';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const attempts = new Map<string, number[]>();
 const WINDOW_MS = 60_000;
@@ -22,63 +23,71 @@ function rateLimit(key: string): boolean {
 }
 
 export async function POST(request: Request) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-
-  if (!rateLimit(ip)) {
-    return NextResponse.json(
-      { ok: false, error: 'Too many attempts. Try again in a minute.' },
-      { status: 429 }
-    );
-  }
-
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
-  }
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
 
-  const parsed = verifyPasswordSchema.safeParse(body);
-  if (!parsed.success) {
+    if (!rateLimit(ip)) {
+      return NextResponse.json(
+        { ok: false, error: 'Too many attempts. Try again in a minute.' },
+        { status: 429 }
+      );
+    }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
+    }
+
+    const parsed = verifyPasswordSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, error: formatZodError(parsed.error) },
+        { status: 400 }
+      );
+    }
+
+    const { testId, password } = parsed.data;
+
+    const test = await prisma.test.findUnique({
+      where: { id: testId },
+      select: { id: true, passwordHash: true, isPublished: true, title: true },
+    });
+
+    if (!test || !test.isPublished) {
+      return NextResponse.json(
+        { ok: false, error: 'Test not found' },
+        { status: 404 }
+      );
+    }
+
+    const valid = await bcrypt.compare(password, test.passwordHash);
+    if (!valid) {
+      return NextResponse.json(
+        { ok: false, error: 'Incorrect password' },
+        { status: 401 }
+      );
+    }
+
+    const session = await prisma.testSession.create({
+      data: {
+        testId: test.id,
+        answers: {},
+        timeRemaining: {},
+        routing: [],
+        isPreview: false,
+      },
+      select: { id: true },
+    });
+
+    return NextResponse.json({ ok: true, data: { sessionId: session.id } });
+  } catch (err) {
+    console.error('[verify]', err);
     return NextResponse.json(
-      { ok: false, error: formatZodError(parsed.error) },
-      { status: 400 }
+      { ok: false, error: err instanceof Error ? err.message : 'Server error' },
+      { status: 500 }
     );
   }
-
-  const { testId, password } = parsed.data;
-
-  const test = await prisma.test.findUnique({
-    where: { id: testId },
-    select: { id: true, passwordHash: true, isPublished: true, title: true },
-  });
-
-  if (!test || !test.isPublished) {
-    return NextResponse.json(
-      { ok: false, error: 'Test not found' },
-      { status: 404 }
-    );
-  }
-
-  const valid = await bcrypt.compare(password, test.passwordHash);
-  if (!valid) {
-    return NextResponse.json(
-      { ok: false, error: 'Incorrect password' },
-      { status: 401 }
-    );
-  }
-
-  const session = await prisma.testSession.create({
-    data: {
-      testId: test.id,
-      answers: {},
-      timeRemaining: {},
-      routing: [],
-      isPreview: false,
-    },
-    select: { id: true },
-  });
-
-  return NextResponse.json({ ok: true, data: { sessionId: session.id } });
 }

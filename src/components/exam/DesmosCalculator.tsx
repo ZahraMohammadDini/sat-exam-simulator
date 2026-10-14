@@ -24,6 +24,8 @@ declare global {
 const DESMOS_SRC =
   'https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fae6';
 
+const DESMOS_IFRAME = 'https://www.desmos.com/calculator';
+
 let scriptPromise: Promise<void> | null = null;
 
 function loadDesmos(): Promise<void> {
@@ -35,8 +37,13 @@ function loadDesmos(): Promise<void> {
     s.src = DESMOS_SRC;
     s.async = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Failed to load Desmos'));
+    s.onerror = () => reject(new Error('Desmos script failed to load'));
     document.head.appendChild(s);
+
+    // Guard against silent failure (script tag exists but never resolves)
+    setTimeout(() => {
+      if (!window.Desmos) reject(new Error('Desmos API did not initialize'));
+    }, 8000);
   });
   return scriptPromise;
 }
@@ -44,8 +51,7 @@ function loadDesmos(): Promise<void> {
 export function DesmosCalculator({ open, onClose }: DesmosCalculatorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const calcRef = useRef<{ destroy: () => void } | null>(null);
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<'loading' | 'api' | 'iframe'>('loading');
 
   useEffect(() => {
     if (!open) return;
@@ -53,18 +59,25 @@ export function DesmosCalculator({ open, onClose }: DesmosCalculatorProps) {
 
     loadDesmos()
       .then(() => {
-        if (cancelled || !containerRef.current || !window.Desmos) return;
-        if (!calcRef.current) {
-          calcRef.current = window.Desmos.GraphingCalculator(containerRef.current, {
-            expressions: true,
-            settingsMenu: false,
-            zoomButtons: true,
-          });
+        if (cancelled) return;
+        if (!containerRef.current || !window.Desmos) {
+          setMode('iframe');
+          return;
         }
-        setLoaded(true);
+        if (!calcRef.current) {
+          calcRef.current = window.Desmos.GraphingCalculator(
+            containerRef.current,
+            {
+              expressions: true,
+              settingsMenu: false,
+              zoomButtons: true,
+            }
+          );
+        }
+        setMode('api');
       })
       .catch(() => {
-        if (!cancelled) setError('Could not load calculator');
+        if (!cancelled) setMode('iframe');
       });
 
     return () => {
@@ -97,15 +110,27 @@ export function DesmosCalculator({ open, onClose }: DesmosCalculatorProps) {
           ✕
         </button>
       </div>
-      <div
-        ref={containerRef}
-        className={clsx('flex-1', !loaded && 'flex items-center justify-center')}
-      >
-        {!loaded && !error && (
-          <span className="text-sm text-bluebook-muted">Loading calculator…</span>
-        )}
-        {error && <span className="text-sm text-bluebook-wrong">{error}</span>}
-      </div>
+
+      {mode === 'iframe' ? (
+        <iframe
+          src={DESMOS_IFRAME}
+          title="Desmos Calculator"
+          className="flex-1 rounded-b-lg border-0"
+          allow="clipboard-write"
+        />
+      ) : (
+        <div
+          ref={containerRef}
+          className={clsx(
+            'flex-1',
+            mode === 'loading' && 'flex items-center justify-center'
+          )}
+        >
+          {mode === 'loading' && (
+            <span className="text-sm text-bluebook-muted">Loading calculator…</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

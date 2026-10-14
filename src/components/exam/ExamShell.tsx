@@ -38,6 +38,18 @@ function getModuleState(
   return all[moduleId] ?? EMPTY_MODULE_STATE;
 }
 
+async function readJson<T>(res: Response): Promise<T> {
+  const raw = await res.text();
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    const snippet = raw.slice(0, 140).replace(/\s+/g, ' ').trim();
+    throw new Error(
+      `Server returned non-JSON (HTTP ${res.status}): ${snippet || '(empty body)'}`
+    );
+  }
+}
+
 export function ExamShell({ test, session }: ExamShellProps) {
   const router = useRouter();
 
@@ -58,13 +70,11 @@ export function ExamShell({ test, session }: ExamShellProps) {
   const currentModule = test.modules[currentModuleIndex];
   const isLastModule = currentModuleIndex === test.modules.length - 1;
 
-  // ── Copy prevention (best-effort) ─────────────────────────────
   useEffect(() => {
     const cleanup = installCopyPrevention();
     return cleanup;
   }, []);
 
-  // ── Initialize time for the current module if missing ─────────
   useEffect(() => {
     if (!currentModule) return;
     setTimeRemaining((prev) => {
@@ -99,7 +109,6 @@ export function ExamShell({ test, session }: ExamShellProps) {
     }).length;
   }, [currentModule, moduleAnswerMap]);
 
-  // ── Autosave helpers ──────────────────────────────────────────
   const saveModule = useCallback(
     async (patch: {
       questionId?: string;
@@ -121,7 +130,6 @@ export function ExamShell({ test, session }: ExamShellProps) {
     [currentModule, session.id]
   );
 
-  // ── Periodic time autosave (every 30s) ────────────────────────
   useEffect(() => {
     const id = setInterval(() => {
       if (!currentModule) return;
@@ -133,7 +141,6 @@ export function ExamShell({ test, session }: ExamShellProps) {
     return () => clearInterval(id);
   }, [currentModule, timeRemaining, saveModule]);
 
-  // ── Handlers ──────────────────────────────────────────────────
   const handleAnswer = (value: string | null) => {
     if (!currentModule || !currentQuestion) return;
     setAnswers((prev) => {
@@ -185,9 +192,10 @@ export function ExamShell({ test, session }: ExamShellProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ moduleId: currentModule.id }),
       });
-      const json = (await res.json()) as
+      const json = await readJson<
         | { ok: true; data: { nextModuleId: string | null; isLast: boolean } }
-        | { ok: false; error: string };
+        | { ok: false; error: string }
+      >(res);
       if (!res.ok || !json.ok) {
         throw new Error(json.ok ? 'Submit failed' : json.error);
       }
@@ -198,9 +206,9 @@ export function ExamShell({ test, session }: ExamShellProps) {
         const cres = await fetch(`/api/sessions/${session.id}/complete`, {
           method: 'POST',
         });
-        const cjson = (await cres.json()) as
-          | { ok: true; data: { sessionId: string } }
-          | { ok: false; error: string };
+        const cjson = await readJson<
+          { ok: true; data: { sessionId: string } } | { ok: false; error: string }
+        >(cres);
         if (!cres.ok || !cjson.ok) {
           throw new Error(cjson.ok ? 'Complete failed' : cjson.error);
         }
@@ -229,7 +237,6 @@ export function ExamShell({ test, session }: ExamShellProps) {
     setBreakState(null);
   };
 
-  // ── Break screen (between modules) ────────────────────────────
   if (breakState) {
     const nextModule = test.modules[breakState.nextModuleIndex];
     return (

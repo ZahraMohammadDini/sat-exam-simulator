@@ -12,6 +12,17 @@ export interface TestListClientProps {
   tests: TestSummary[];
 }
 
+async function parseJsonResponse<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(
+      `Server returned non-JSON (${res.status}): ${text.slice(0, 120).replace(/\s+/g, ' ')}`
+    );
+  }
+}
+
 export function TestListClient({ tests }: TestListClientProps) {
   const router = useRouter();
   const [activeTest, setActiveTest] = useState<TestSummary | null>(null);
@@ -42,9 +53,9 @@ export function TestListClient({ tests }: TestListClientProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ testId: activeTest.id, password }),
       });
-      const json = (await res.json()) as
-        | { ok: true; data: { sessionId: string } }
-        | { ok: false; error: string };
+      const json = await parseJsonResponse<
+        { ok: true; data: { sessionId: string } } | { ok: false; error: string }
+      >(res);
       if (!res.ok || !json.ok) {
         throw new Error(json.ok ? 'Failed to start test' : json.error);
       }
@@ -92,7 +103,9 @@ export function TestListClient({ tests }: TestListClientProps) {
       <Modal
         open={activeTest != null}
         onClose={closeModal}
-        title={activeTest ? `Enter password for "${activeTest.title}"` : 'Enter password'}
+        title={
+          activeTest ? `Enter password for "${activeTest.title}"` : 'Enter password'
+        }
         footer={
           <>
             <Button variant="secondary" onClick={closeModal} disabled={submitting}>
