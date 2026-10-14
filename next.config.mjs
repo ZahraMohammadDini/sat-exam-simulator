@@ -1,6 +1,6 @@
-import type { NextConfig } from 'next';
-
-const config: NextConfig = {
+cat > next.config.mjs << 'EOF'
+/** @type {import('next').NextConfig} */
+const config = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
@@ -13,3 +13,4 @@ const config: NextConfig = {
 };
 
 export default config;
+EOF
