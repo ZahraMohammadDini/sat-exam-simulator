@@ -29,17 +29,19 @@ export default async function Home() {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-12">
-      <header className="mb-10">
-        <div className="flex items-center justify-between gap-4">
+      <header className="mb-12">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">SAT Exam Simulator</h1>
-            <p className="mt-2 text-bluebook-muted">
+            <h1 className="text-2xl font-bold text-text-primary">
+              SAT Exam Simulator
+            </h1>
+            <p className="mt-2 text-base text-text-secondary">
               Timed practice with adaptive modules. Enter a test password to begin.
             </p>
           </div>
           <Link
             href={student ? '/student/dashboard' : '/student'}
-            className="rounded-md border border-bluebook-border bg-white px-4 py-2 text-sm font-medium hover:bg-bluebook-bg"
+            className="rounded-md border border-border-default bg-surface px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
           >
             {student ? `Hi, ${student.name ?? 'student'}` : 'Student sign in'}
           </Link>
@@ -48,11 +50,11 @@ export default async function Home() {
 
       <TestListClient tests={summaries} />
 
-      <footer className="mt-16 flex items-center justify-center gap-6 text-xs text-bluebook-muted">
-        <Link href="/admin" className="hover:underline">
+      <footer className="mt-16 flex items-center justify-center gap-6 text-xs text-text-muted">
+        <Link href="/admin" className="hover:text-text-primary hover:underline">
           Admin
         </Link>
-        <Link href="/student" className="hover:underline">
+        <Link href="/student" className="hover:text-text-primary hover:underline">
           Student
         </Link>
       </footer>

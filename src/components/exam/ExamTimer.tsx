@@ -55,21 +55,22 @@ export function ExamTimer({ secondsRemaining, onTick, onExpire, className }: Exa
 
   const tone =
     seconds <= 60
-      ? 'text-bluebook-wrong'
+      ? 'text-state-danger'
       : seconds <= 300
-      ? 'text-bluebook-warn'
-      : 'text-bluebook-text';
+      ? 'text-state-warning'
+      : 'text-text-primary';
 
   return (
     <div
       className={clsx(
-        'flex items-center gap-2 font-mono text-lg font-semibold tabular-nums',
+        'flex items-center gap-2 rounded-md bg-surface px-3 py-1.5',
+        'font-timer text-base font-medium',
         tone,
         className
       )}
       aria-live="polite"
     >
-      <span aria-hidden>⏱</span>
+      <span aria-hidden className="text-sm opacity-60">⏱</span>
       <span aria-label="Time remaining">{formatTime(seconds)}</span>
     </div>
   );

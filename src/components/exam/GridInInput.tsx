@@ -28,14 +28,17 @@ export function GridInInput({ value, onChange, disabled, className }: GridInInpu
         onBlur={() => setFocused(false)}
         placeholder="Enter your answer"
         className={clsx(
-          'h-12 w-56 rounded-md border border-bluebook-border bg-white px-4 text-lg font-mono',
-          'focus:outline-none focus:ring-2 focus:ring-bluebook-accent'
+          'h-12 w-64 rounded-md border border-border-default bg-surface px-4',
+          'font-timer text-lg text-text-primary',
+          'focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
         )}
       />
       {focused && (
-        <p className="text-xs text-bluebook-muted">
-          Accepts integers (<code>3</code>), decimals (<code>3.5</code>), negatives (
-          <code>-2</code>), and fractions (<code>3/4</code>).
+        <p className="text-xs text-text-muted">
+          Accepts integers (<code className="font-mono">3</code>), decimals (
+          <code className="font-mono">3.5</code>), negatives (
+          <code className="font-mono">-2</code>), and fractions (
+          <code className="font-mono">3/4</code>).
         </p>
       )}
     </div>

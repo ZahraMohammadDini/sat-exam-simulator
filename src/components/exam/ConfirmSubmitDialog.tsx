@@ -36,12 +36,12 @@ export function ConfirmSubmitDialog({
         </>
       }
     >
-      <p className="text-sm text-bluebook-muted">
+      <p className="text-sm text-text-secondary">
         {unanswered > 0
           ? `You have ${unanswered} unanswered question${
               unanswered === 1 ? '' : 's'
-            }. Once you submit, you can’t return to this section.`
-          : 'All questions answered. Once you submit, you can’t return to this section.'}
+            }. Once you submit, you can't return to this section.`
+          : "All questions answered. Once you submit, you can't return to this section."}
       </p>
     </Modal>
   );

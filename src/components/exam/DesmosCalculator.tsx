@@ -40,7 +40,6 @@ function loadDesmos(): Promise<void> {
     s.onerror = () => reject(new Error('Desmos script failed to load'));
     document.head.appendChild(s);
 
-    // Guard against silent failure (script tag exists but never resolves)
     setTimeout(() => {
       if (!window.Desmos) reject(new Error('Desmos API did not initialize'));
     }, 8000);
@@ -96,15 +95,15 @@ export function DesmosCalculator({ open, onClose }: DesmosCalculatorProps) {
 
   return (
     <div
-      className="fixed bottom-4 right-4 z-40 flex flex-col rounded-lg border border-bluebook-border bg-white shadow-xl"
-      style={{ width: 400, height: 480 }}
+      className="fixed bottom-4 right-4 z-40 flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-modal"
+      style={{ width: 420, height: 520 }}
     >
-      <div className="flex items-center justify-between border-b border-bluebook-border px-3 py-2">
-        <span className="text-sm font-semibold">Calculator</span>
+      <div className="flex items-center justify-between border-b border-border-subtle bg-surface-alt px-4 py-2.5">
+        <span className="text-sm font-semibold text-text-primary">Calculator</span>
         <button
           type="button"
           onClick={onClose}
-          className="rounded p-1 text-bluebook-muted hover:bg-bluebook-bg"
+          className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
           aria-label="Close calculator"
         >
           ✕
@@ -115,7 +114,7 @@ export function DesmosCalculator({ open, onClose }: DesmosCalculatorProps) {
         <iframe
           src={DESMOS_IFRAME}
           title="Desmos Calculator"
-          className="flex-1 rounded-b-lg border-0"
+          className="flex-1 border-0"
           allow="clipboard-write"
         />
       ) : (
@@ -127,7 +126,7 @@ export function DesmosCalculator({ open, onClose }: DesmosCalculatorProps) {
           )}
         >
           {mode === 'loading' && (
-            <span className="text-sm text-bluebook-muted">Loading calculator…</span>
+            <span className="text-sm text-text-muted">Loading calculator…</span>
           )}
         </div>
       )}

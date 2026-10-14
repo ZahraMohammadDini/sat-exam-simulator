@@ -16,7 +16,7 @@ export function AnswerReviewList({ modules, showExplanations }: AnswerReviewList
     <section className="space-y-8">
       {modules.map((m) => (
         <div key={m.moduleId}>
-          <h2 className="mb-3 text-lg font-semibold">
+          <h2 className="mb-3 text-lg font-semibold text-text-primary">
             {m.subject === 'math' ? 'Math' : 'Reading & Writing'} — Module{' '}
             {m.moduleNumber}
           </h2>
@@ -49,18 +49,20 @@ function QuestionReviewItem({ question, number, showExplanation }: ItemProps) {
   return (
     <li
       className={clsx(
-        'rounded-lg border bg-white shadow-card',
-        question.isCorrect ? 'border-green-200' : 'border-red-200'
+        'overflow-hidden rounded-lg border bg-surface shadow-card',
+        question.isCorrect
+          ? 'border-border-subtle border-l-4 border-l-state-success'
+          : 'border-border-subtle border-l-4 border-l-state-danger'
       )}
     >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-start justify-between gap-4 p-4 text-left"
+        className="flex w-full items-start justify-between gap-4 p-4 text-left transition-colors hover:bg-surface-hover"
         aria-expanded={open}
       >
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 font-mono text-sm text-bluebook-muted">
+          <span className="mt-0.5 font-mono text-sm text-text-muted">
             {number}.
           </span>
           <div className="flex-1">
@@ -69,12 +71,12 @@ function QuestionReviewItem({ question, number, showExplanation }: ItemProps) {
               <img
                 src={q.stemImage}
                 alt="Question stem"
-                className="max-h-24 rounded border border-bluebook-border"
+                className="max-h-24 rounded border border-border-default"
               />
             ) : q.stem ? (
               <KatexRenderer text={q.stem} className="text-sm" />
             ) : (
-              <span className="text-sm text-bluebook-muted">(question)</span>
+              <span className="text-sm text-text-muted">(question)</span>
             )}
           </div>
         </div>
@@ -82,33 +84,33 @@ function QuestionReviewItem({ question, number, showExplanation }: ItemProps) {
           <Badge tone={question.isCorrect ? 'success' : 'danger'}>
             {question.isCorrect ? 'Correct' : 'Incorrect'}
           </Badge>
-          <span className="text-xs text-bluebook-muted" aria-hidden>
+          <span className="text-xs text-text-muted" aria-hidden>
             {open ? '▾' : '▸'}
           </span>
         </div>
       </button>
 
       {open && (
-        <div className="border-t border-bluebook-border p-4 pt-3 text-sm">
+        <div className="border-t border-border-subtle p-4 pt-3 text-sm">
           <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
-              <span className="text-xs uppercase tracking-wide text-bluebook-muted">
+              <span className="text-xs uppercase tracking-wide text-text-muted">
                 Your answer
               </span>
               <div
                 className={clsx(
                   'mt-1 font-mono',
-                  question.isCorrect ? 'text-green-700' : 'text-red-700'
+                  question.isCorrect ? 'text-state-success' : 'text-state-danger'
                 )}
               >
                 {question.studentAnswer ?? '(blank)'}
               </div>
             </div>
             <div>
-              <span className="text-xs uppercase tracking-wide text-bluebook-muted">
+              <span className="text-xs uppercase tracking-wide text-text-muted">
                 Correct answer
               </span>
-              <div className="mt-1 font-mono text-green-700">
+              <div className="mt-1 font-mono text-state-success">
                 {question.correctAnswer}
               </div>
             </div>
@@ -116,13 +118,15 @@ function QuestionReviewItem({ question, number, showExplanation }: ItemProps) {
 
           {q.choices && q.choices.length > 0 && (
             <div className="mb-3">
-              <span className="text-xs uppercase tracking-wide text-bluebook-muted">
+              <span className="text-xs uppercase tracking-wide text-text-muted">
                 Choices
               </span>
               <ul className="mt-1 space-y-1">
                 {q.choices.map((c) => (
                   <li key={c.id} className="flex items-start gap-2">
-                    <span className="font-mono text-xs">{c.id}.</span>
+                    <span className="font-mono text-xs text-text-secondary">
+                      {c.id}.
+                    </span>
                     {c.mode === 'text' ? (
                       <KatexRenderer text={c.text} as="span" className="text-sm" />
                     ) : (
@@ -140,8 +144,8 @@ function QuestionReviewItem({ question, number, showExplanation }: ItemProps) {
           )}
 
           {showExplanation && (question.explanation || question.explanationImage) && (
-            <div className="rounded-md bg-bluebook-bg p-3">
-              <span className="text-xs uppercase tracking-wide text-bluebook-muted">
+            <div className="rounded-md bg-surface-alt p-3">
+              <span className="text-xs uppercase tracking-wide text-text-muted">
                 Explanation
               </span>
               <div className="mt-1">
@@ -150,7 +154,7 @@ function QuestionReviewItem({ question, number, showExplanation }: ItemProps) {
                   <img
                     src={q.explanationImage}
                     alt="Explanation"
-                    className="max-w-full rounded border border-bluebook-border"
+                    className="max-w-full rounded border border-border-default"
                   />
                 ) : (
                   <KatexRenderer text={question.explanation} className="text-sm" />

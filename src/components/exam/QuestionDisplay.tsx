@@ -37,11 +37,11 @@ export function QuestionDisplay({
             <img
               src={question.stemImage}
               alt="Question stem"
-              className="max-w-full rounded border border-bluebook-border"
+              className="max-w-full rounded-md border border-border-default"
               draggable={false}
             />
           ) : (
-            <KatexRenderer text={question.stem} className="text-base" />
+            <KatexRenderer text={question.stem} />
           )}
         </div>
 

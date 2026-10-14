@@ -38,7 +38,7 @@ export function ResultsContent({
         />
       </div>
 
-      <div ref={printRef} className="space-y-8 bg-bluebook-bg p-1">
+      <div ref={printRef} className="space-y-6 bg-app-bg p-1">
         <ResultsSummary
           testTitle={results.testTitle}
           completedAt={results.completedAt}
@@ -62,7 +62,7 @@ export function ResultsContent({
       <div className="pt-4 text-center">
         <a
           href="/"
-          className="text-sm text-bluebook-muted hover:text-bluebook-accent hover:underline"
+          className="text-sm text-text-muted transition-colors hover:text-accent hover:underline"
         >
           ← Back to test list
         </a>

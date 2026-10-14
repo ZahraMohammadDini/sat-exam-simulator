@@ -46,11 +46,11 @@ export function AdminSidebar({ username }: AdminSidebarProps) {
   };
 
   return (
-    <aside className="sticky top-0 flex h-screen w-60 flex-none flex-col border-r border-bluebook-border bg-white">
-      <div className="border-b border-bluebook-border px-4 py-4">
+    <aside className="sticky top-0 flex h-screen w-60 flex-none flex-col border-r border-border-subtle bg-surface">
+      <div className="border-b border-border-subtle px-4 py-4">
         <Link href="/admin/dashboard" className="block">
-          <div className="text-base font-bold">SAT Admin</div>
-          <div className="text-xs text-bluebook-muted">Exam simulator</div>
+          <div className="text-base font-bold text-text-primary">SAT Admin</div>
+          <div className="text-xs text-text-muted">Exam simulator</div>
         </Link>
       </div>
 
@@ -64,8 +64,8 @@ export function AdminSidebar({ username }: AdminSidebarProps) {
               className={clsx(
                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 active
-                  ? 'bg-blue-50 text-bluebook-accent'
-                  : 'text-bluebook-text hover:bg-bluebook-bg'
+                  ? 'bg-accent-subtle text-accent'
+                  : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
               )}
             >
               <span aria-hidden className="w-4 text-center">
@@ -77,15 +77,15 @@ export function AdminSidebar({ username }: AdminSidebarProps) {
         })}
       </nav>
 
-      <div className="border-t border-bluebook-border p-3">
-        <div className="mb-2 px-3 text-xs text-bluebook-muted">
-          Signed in as <strong className="text-bluebook-text">{username}</strong>
+      <div className="border-t border-border-subtle p-3">
+        <div className="mb-2 px-3 text-xs text-text-muted">
+          Signed in as <strong className="text-text-primary">{username}</strong>
         </div>
         <button
           type="button"
           onClick={logout}
           disabled={loggingOut}
-          className="w-full rounded-md border border-bluebook-border px-3 py-2 text-sm text-bluebook-text hover:bg-bluebook-bg disabled:opacity-50"
+          className="w-full rounded-md border border-border-default bg-surface px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary disabled:opacity-50"
         >
           {loggingOut ? 'Signing out…' : 'Sign out'}
         </button>

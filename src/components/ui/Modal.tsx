@@ -53,25 +53,24 @@ export function Modal({
       aria-label={title}
     >
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden
       />
       <div
         className={clsx(
-          'relative z-10 w-full rounded-lg bg-white shadow-xl',
-          'max-h-[90vh] flex flex-col',
+          'relative z-10 flex max-h-[90vh] w-full flex-col rounded-lg bg-surface shadow-modal',
           sizeMap[size],
           className
         )}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-bluebook-border px-5 py-3">
-            <h2 className="text-base font-semibold">{title}</h2>
+          <div className="flex items-center justify-between border-b border-border-subtle px-5 py-3">
+            <h2 className="text-base font-semibold text-text-primary">{title}</h2>
             <button
               type="button"
               onClick={onClose}
-              className="rounded p-1 text-bluebook-muted hover:bg-bluebook-bg"
+              className="rounded p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
               aria-label="Close"
             >
               ✕
@@ -80,7 +79,7 @@ export function Modal({
         )}
         <div className="overflow-y-auto p-5">{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-bluebook-border px-5 py-3">
+          <div className="flex justify-end gap-2 border-t border-border-subtle px-5 py-3">
             {footer}
           </div>
         )}

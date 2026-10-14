@@ -31,20 +31,20 @@ export function ResultsSummary({
     totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
   return (
-    <section className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
+    <section className="rounded-lg border border-border-subtle bg-surface p-6 shadow-card">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold">{testTitle}</h1>
-        <p className="mt-1 text-sm text-bluebook-muted">
+        <h1 className="text-xl font-bold text-text-primary">{testTitle}</h1>
+        <p className="mt-1 text-sm text-text-muted">
           Completed {formatDate(completedAt)}
         </p>
       </header>
 
       <div className="mb-6 flex items-baseline gap-3">
-        <span className="text-4xl font-bold">
+        <span className="text-4xl font-bold text-text-primary">
           {totalCorrect}
-          <span className="text-2xl text-bluebook-muted">/{totalQuestions}</span>
+          <span className="text-2xl text-text-muted">/{totalQuestions}</span>
         </span>
-        <span className="text-lg text-bluebook-muted">({pct}%)</span>
+        <span className="text-lg text-text-secondary">({pct}%)</span>
       </div>
 
       <ul className="space-y-2">
@@ -54,15 +54,15 @@ export function ResultsSummary({
           return (
             <li
               key={m.moduleId}
-              className="flex items-center justify-between rounded-md border border-bluebook-border bg-bluebook-bg px-4 py-3"
+              className="flex items-center justify-between rounded-md border border-border-subtle bg-surface-alt px-4 py-3"
             >
               <div className="flex items-center gap-3">
-                <span className="font-medium">
+                <span className="font-medium text-text-primary">
                   {subject} — Module {m.moduleNumber}
                 </span>
                 <Badge tone="neutral">{m.difficulty}</Badge>
               </div>
-              <span className="font-mono text-sm">
+              <span className="font-mono text-sm text-text-secondary">
                 {m.correct}/{m.total} ({modPct}%)
               </span>
             </li>

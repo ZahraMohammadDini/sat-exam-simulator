@@ -124,7 +124,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
           body: JSON.stringify({ moduleId: currentModule.id, ...patch }),
         });
       } catch {
-        // Transient autosave failures are ignored; next tick will retry
+        // transient autosave failures ignored
       }
     },
     [currentModule, session.id]
@@ -250,8 +250,8 @@ export function ExamShell({ test, session }: ExamShellProps) {
 
   if (!currentModule) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-bluebook-muted">Module not found.</p>
+      <div className="flex min-h-screen items-center justify-center bg-app-bg">
+        <p className="text-text-muted">Module not found.</p>
       </div>
     );
   }
@@ -261,7 +261,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
   const showCalculator = currentModule.subject === 'math';
 
   return (
-    <div className="flex min-h-screen flex-col bg-bluebook-bg">
+    <div className="flex min-h-screen flex-col bg-app-bg">
       <ExamHeader
         moduleTitle={formatModuleTitle(currentModule)}
         secondsRemaining={secondsRemaining}
@@ -277,18 +277,18 @@ export function ExamShell({ test, session }: ExamShellProps) {
       />
 
       {errorMessage && (
-        <div className="mx-auto mt-3 w-full max-w-7xl px-4">
-          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+        <div className="mx-auto mt-3 w-full max-w-7xl px-4 lg:px-6">
+          <div className="rounded-md border border-state-danger/30 bg-state-danger-bg px-4 py-3 text-sm text-state-danger">
             {errorMessage}
           </div>
         </div>
       )}
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6">
-        <main className="flex-1">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6 lg:px-6">
+        <main className="min-w-0 flex-1">
           {currentQuestion ? (
-            <div className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
-              <div className="mb-4 flex items-center justify-between text-sm text-bluebook-muted">
+            <div className="rounded-lg border border-border-subtle bg-surface p-6 shadow-card lg:p-8">
+              <div className="mb-6 flex items-center justify-between text-sm text-text-muted">
                 <span>
                   Question {currentQuestionIndex + 1} of {currentModule.questions.length}
                 </span>
@@ -302,10 +302,10 @@ export function ExamShell({ test, session }: ExamShellProps) {
               />
             </div>
           ) : (
-            <p className="text-bluebook-muted">No questions in this module.</p>
+            <p className="text-text-muted">No questions in this module.</p>
           )}
 
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex items-center justify-between gap-3">
             <Button
               variant="secondary"
               onClick={() => setCurrentQuestionIndex((i) => Math.max(0, i - 1))}
@@ -333,8 +333,8 @@ export function ExamShell({ test, session }: ExamShellProps) {
         </main>
 
         <aside className="hidden w-64 flex-shrink-0 lg:block">
-          <div className="sticky top-24 rounded-lg border border-bluebook-border bg-white p-4 shadow-card">
-            <h3 className="mb-3 text-sm font-semibold">Questions</h3>
+          <div className="sticky top-20 rounded-lg border border-border-subtle bg-surface p-4 shadow-card">
+            <h3 className="mb-3 text-sm font-semibold text-text-primary">Questions</h3>
             <QuestionNavigator
               questions={currentModule.questions}
               answers={moduleAnswerMap}
@@ -349,17 +349,17 @@ export function ExamShell({ test, session }: ExamShellProps) {
       {navigatorOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
             onClick={() => setNavigatorOpen(false)}
             aria-hidden
           />
-          <div className="relative ml-auto h-full w-72 bg-white p-4 shadow-xl">
+          <div className="relative ml-auto h-full w-72 bg-surface p-4 shadow-modal">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Questions</h3>
+              <h3 className="text-sm font-semibold text-text-primary">Questions</h3>
               <button
                 type="button"
                 onClick={() => setNavigatorOpen(false)}
-                className="rounded p-1 text-bluebook-muted hover:bg-bluebook-bg"
+                className="rounded p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
                 aria-label="Close navigator"
               >
                 ✕

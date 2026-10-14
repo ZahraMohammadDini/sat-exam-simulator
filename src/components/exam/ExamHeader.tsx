@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import { ExamTimer } from './ExamTimer';
 import { FlagButton } from './FlagButton';
 
@@ -27,35 +28,46 @@ export function ExamHeader({
   onOpenNavigator,
 }: ExamHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-bluebook-border bg-white">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-        <div className="flex items-center gap-4">
-          <span className="font-semibold">{moduleTitle}</span>
+    <header className="sticky top-0 z-10 border-b border-border-subtle bg-surface-alt">
+      <div className="mx-auto grid h-14 max-w-7xl grid-cols-3 items-center px-4 lg:px-6">
+        {/* Left: section title + flag */}
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="truncate text-sm font-semibold text-text-primary">
+            {moduleTitle}
+          </span>
           <FlagButton flagged={flagged} onToggle={onToggleFlag} />
         </div>
-        <div className="flex items-center gap-4">
+
+        {/* Center: timer */}
+        <div className="flex justify-center">
+          <ExamTimer secondsRemaining={secondsRemaining} onExpire={onExpire} />
+        </div>
+
+        {/* Right: tools */}
+        <div className="flex items-center justify-end gap-2">
           {showCalculator && (
             <button
               type="button"
               onClick={onToggleCalculator}
-              className={
-                'rounded-md border border-bluebook-border px-3 py-1.5 text-sm ' +
-                (calculatorOpen
-                  ? 'bg-bluebook-accent text-white'
-                  : 'bg-white text-bluebook-text hover:bg-bluebook-bg')
-              }
+              className={clsx(
+                'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors focus-ring',
+                calculatorOpen
+                  ? 'border-accent bg-accent-subtle text-accent'
+                  : 'border-border-default bg-surface text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+              )}
             >
-              Calculator
+              <span aria-hidden className="text-sm leading-none">📐</span>
+              <span className="hidden sm:inline">Calculator</span>
             </button>
           )}
+
           <button
             type="button"
             onClick={onOpenNavigator}
-            className="rounded-md border border-bluebook-border px-3 py-1.5 text-sm text-bluebook-text hover:bg-bluebook-bg lg:hidden"
+            className="rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-ring lg:hidden"
           >
             Questions
           </button>
-          <ExamTimer secondsRemaining={secondsRemaining} onExpire={onExpire} />
         </div>
       </div>
     </header>

@@ -69,24 +69,28 @@ export function TestListClient({ tests }: TestListClientProps) {
   if (tests.length === 0) {
     return (
       <Alert tone="info" title="No tests available yet">
-        Published tests will show up here. Ask your admin to publish one.
+        Published tests will show up here. Ask your instructor to publish one.
       </Alert>
     );
   }
 
   return (
     <>
-      <ul className="space-y-4">
+      <ul className="space-y-3">
         {tests.map((test) => (
           <li
             key={test.id}
-            className="rounded-lg border border-bluebook-border bg-white p-5 shadow-card"
+            className="rounded-lg border border-border-subtle bg-surface p-5 shadow-card"
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <h2 className="text-lg font-semibold">{test.title}</h2>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base font-semibold text-text-primary">
+                  {test.title}
+                </h2>
                 {test.description && (
-                  <p className="mt-1 text-sm text-bluebook-muted">{test.description}</p>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    {test.description}
+                  </p>
                 )}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Badge tone="accent">
@@ -118,7 +122,7 @@ export function TestListClient({ tests }: TestListClientProps) {
         }
       >
         <div className="space-y-3">
-          <p className="text-sm text-bluebook-muted">
+          <p className="text-sm text-text-secondary">
             The timer starts as soon as you begin. Make sure you have time to finish.
           </p>
           {error && <Alert tone="error">{error}</Alert>}
@@ -131,7 +135,7 @@ export function TestListClient({ tests }: TestListClientProps) {
             }}
             placeholder="Test password"
             autoFocus
-            className="h-10 w-full rounded-md border border-bluebook-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </div>
       </Modal>

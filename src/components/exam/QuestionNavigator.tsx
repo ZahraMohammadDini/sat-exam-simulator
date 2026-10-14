@@ -32,38 +32,39 @@ export function QuestionNavigator({
               type="button"
               onClick={() => onNavigate(idx)}
               className={clsx(
-                'relative flex h-10 items-center justify-center rounded-md border text-sm font-semibold transition-colors',
+                'relative flex h-10 items-center justify-center rounded-md border text-sm font-semibold transition-all focus-ring',
                 isCurrent
-                  ? 'border-bluebook-accent bg-bluebook-accent text-white'
+                  ? 'border-accent bg-accent text-white shadow-sm'
                   : isAnswered
-                  ? 'border-bluebook-accent/50 bg-blue-50 text-bluebook-accent'
-                  : 'border-bluebook-border bg-white text-bluebook-muted hover:bg-bluebook-bg'
+                  ? 'border-accent/30 bg-surface-selected text-accent hover:border-accent/50'
+                  : 'border-border-default bg-surface text-text-secondary hover:border-border-default hover:bg-surface-hover'
               )}
               aria-label={`Question ${idx + 1}${isFlagged ? ' (flagged)' : ''}`}
             >
               {idx + 1}
               {isFlagged && (
                 <span
-                  className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-bluebook-flag text-[10px] text-white"
+                  className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-flag-active ring-2 ring-surface"
                   aria-hidden
-                >
-                  ★
-                </span>
+                />
               )}
             </button>
           );
         })}
       </div>
-      <div className="flex flex-wrap gap-3 text-xs text-bluebook-muted">
-        <span className="flex items-center gap-1">
-          <span className="h-3 w-3 rounded border border-bluebook-accent bg-blue-50" /> Answered
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-3 w-3 rounded border border-bluebook-border bg-white" /> Not answered
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-3 w-3 rounded-full bg-bluebook-flag" /> Flagged
-        </span>
+      <div className="space-y-1.5 border-t border-border-subtle pt-3 text-xs text-text-muted">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-3 w-3 rounded border border-accent/30 bg-surface-selected" />
+          Answered
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-3 w-3 rounded border border-border-default bg-surface" />
+          Not answered
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-3 w-3 rounded-full bg-flag-active" />
+          Flagged
+        </div>
       </div>
     </div>
   );

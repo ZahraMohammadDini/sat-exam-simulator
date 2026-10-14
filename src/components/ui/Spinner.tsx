@@ -18,7 +18,7 @@ export function Spinner({ size = 'md', className, label }: SpinnerProps) {
       role="status"
       aria-label={label ?? 'Loading'}
       className={clsx(
-        'inline-block animate-spin rounded-full border-bluebook-border border-t-bluebook-accent',
+        'inline-block animate-spin rounded-full border-border-default border-t-accent',
         sizeMap[size],
         className
       )}

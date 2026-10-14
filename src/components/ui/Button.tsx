@@ -12,13 +12,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    'bg-bluebook-accent text-white hover:bg-bluebook-accentHover disabled:bg-bluebook-accent/50',
+    'bg-accent text-white hover:bg-accent-hover disabled:bg-accent/50 disabled:text-white/70',
   secondary:
-    'bg-white text-bluebook-text border border-bluebook-border hover:bg-bluebook-bg disabled:opacity-50',
+    'bg-surface text-text-primary border border-border-default hover:bg-surface-hover disabled:opacity-50',
   ghost:
-    'bg-transparent text-bluebook-text hover:bg-bluebook-bg disabled:opacity-50',
+    'bg-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary disabled:opacity-50',
   danger:
-    'bg-bluebook-wrong text-white hover:bg-red-700 disabled:bg-bluebook-wrong/50',
+    'bg-state-danger text-white hover:bg-red-800 disabled:bg-state-danger/50',
 };
 
 const sizeClasses: Record<Size, string> = {
@@ -38,9 +38,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         className={clsx(
           'inline-flex items-center justify-center gap-2 rounded-md font-medium',
-          'transition-colors focus:outline-none focus-visible:ring-2',
-          'focus-visible:ring-bluebook-accent focus-visible:ring-offset-1',
-          'disabled:cursor-not-allowed',
+          'transition-colors focus-ring disabled:cursor-not-allowed',
           variantClasses[variant],
           sizeClasses[size],
           className

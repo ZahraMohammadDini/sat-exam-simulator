@@ -14,16 +14,18 @@ export function FlagButton({ flagged, onToggle, className }: FlagButtonProps) {
       type="button"
       onClick={onToggle}
       className={clsx(
-        'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
+        'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors focus-ring',
         flagged
-          ? 'border-bluebook-flag bg-amber-50 text-bluebook-flag'
-          : 'border-bluebook-border bg-white text-bluebook-muted hover:bg-bluebook-bg',
+          ? 'border-flag-active/30 bg-state-danger-bg text-flag-active'
+          : 'border-border-default bg-surface text-text-secondary hover:bg-surface-hover hover:text-text-primary',
         className
       )}
       aria-pressed={flagged}
     >
-      <span aria-hidden>{flagged ? '★' : '☆'}</span>
-      <span>{flagged ? 'Flagged' : 'Flag for review'}</span>
+      <span aria-hidden className="text-sm leading-none">
+        {flagged ? '⚑' : '⚐'}
+      </span>
+      <span className="hidden sm:inline">{flagged ? 'Flagged' : 'Flag'}</span>
     </button>
   );
 }

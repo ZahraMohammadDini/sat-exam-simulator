@@ -38,14 +38,14 @@ export function StudentLoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex min-h-screen items-center justify-center bg-app-bg px-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card"
+        className="w-full max-w-sm space-y-4 rounded-lg border border-border-subtle bg-surface p-6 shadow-card"
       >
         <div>
-          <h1 className="text-xl font-bold">Student sign in</h1>
-          <p className="mt-1 text-sm text-bluebook-muted">
+          <h1 className="text-xl font-bold text-text-primary">Student sign in</h1>
+          <p className="mt-1 text-sm text-text-muted">
             Sign in to track your practice progress.
           </p>
         </div>
@@ -53,7 +53,7 @@ export function StudentLoginForm() {
         {error && <Alert tone="error">{error}</Alert>}
 
         <label className="block space-y-1">
-          <span className="text-sm font-medium">Username</span>
+          <span className="text-sm font-medium text-text-primary">Username</span>
           <input
             type="text"
             autoComplete="username"
@@ -61,19 +61,19 @@ export function StudentLoginForm() {
             onChange={(e) => setUsername(e.target.value)}
             required
             autoFocus
-            className="h-10 w-full rounded-md border border-bluebook-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </label>
 
         <label className="block space-y-1">
-          <span className="text-sm font-medium">Password</span>
+          <span className="text-sm font-medium text-text-primary">Password</span>
           <input
             type="password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="h-10 w-full rounded-md border border-bluebook-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </label>
 
@@ -81,8 +81,8 @@ export function StudentLoginForm() {
           Sign in
         </Button>
 
-        <div className="text-center text-xs text-bluebook-muted">
-          <Link href="/" className="hover:underline">
+        <div className="text-center text-xs text-text-muted">
+          <Link href="/" className="hover:text-text-primary hover:underline">
             Take a test without an account
           </Link>
         </div>
