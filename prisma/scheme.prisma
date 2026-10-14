@@ -1,0 +1,145 @@
+// ─────────────────────────────────────────────────────────────────
+// SAT Exam Simulator — Prisma schema
+// ─────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Admin
+// ─────────────────────────────────────────────────────────────────
+model Admin {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Test
+// ─────────────────────────────────────────────────────────────────
+model Test {
+  id               String        @id @default(cuid())
+  title            String
+  description      String?
+  passwordHash     String
+  isPublished      Boolean       @default(false)
+  allowReview      Boolean       @default(true)
+  showExplanations Boolean       @default(true)
+  adaptiveEnabled  Boolean       @default(false)
+  modules          TestModule[]
+  sessions         TestSession[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([isPublished])
+}
+
+// ─────────────────────────────────────────────────────────────────
+// TestModule
+// ─────────────────────────────────────────────────────────────────
+model TestModule {
+  id                String                @id @default(cuid())
+  testId            String
+  test              Test                  @relation(fields: [testId], references: [id], onDelete: Cascade)
+  subject           String                // "reading_writing" | "math"
+  moduleNumber      Int                   // 1 | 2
+  difficulty        String                @default("standard") // "standard" | "easy" | "hard"
+  timeLimitSeconds  Int
+  order             Int
+  adaptiveThreshold Int?                  // only on module 1
+  routesTo          String?               // "easy" | "hard" — only on module 1
+  questions         TestModuleQuestion[]
+  createdAt         DateTime              @default(now())
+
+  @@index([testId, order])
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Question
+// ─────────────────────────────────────────────────────────────────
+model Question {
+  id         String   @id @default(cuid())
+  subject    String   // "reading_writing" | "math"
+  type       String   // "multiple_choice" | "grid_in"
+  difficulty String   @default("medium")
+  domain     String?
+  tags       String[]
+
+  // Passage (optional, one of text/image)
+  passage        String?
+  passageImage   String?
+  passageIsImage Boolean @default(false)
+
+  // Stem (required, one of text/image)
+  stem        String?
+  stemImage   String?
+  stemIsImage Boolean @default(false)
+
+  // Choices (MC only). Shape:
+  // [{ id:"A", mode:"text"|"image", text?:string, imageUrl?:string }, ...]
+  choices       Json?
+  correctAnswer String
+
+  // Explanation (optional, one of text/image)
+  explanation        String?
+  explanationImage   String?
+  explanationIsImage Boolean @default(false)
+
+  isPublished Boolean              @default(true)
+  modules     TestModuleQuestion[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([subject, difficulty])
+  @@index([isPublished])
+}
+
+// ─────────────────────────────────────────────────────────────────
+// TestModuleQuestion (join table with ordering)
+// ─────────────────────────────────────────────────────────────────
+model TestModuleQuestion {
+  id         String     @id @default(cuid())
+  moduleId   String
+  module     TestModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question   @relation(fields: [questionId], references: [id])
+  order      Int
+
+  @@unique([moduleId, questionId])
+  @@index([moduleId, order])
+}
+
+// ─────────────────────────────────────────────────────────────────
+// TestSession
+// ─────────────────────────────────────────────────────────────────
+model TestSession {
+  id                 String    @id @default(cuid())
+  testId             String
+  test               Test      @relation(fields: [testId], references: [id])
+  startedAt          DateTime  @default(now())
+  completedAt        DateTime?
+  currentModuleIndex Int       @default(0)
+
+  // { [moduleId]: { [questionId]: "A" | "3.5" | null, __flagged?: string[] } }
+  answers            Json      @default("{}")
+  // { [moduleId]: secondsRemaining }
+  timeRemaining      Json      @default("{}")
+  // [{ moduleId, correct, total, routedTo }]
+  routing            Json      @default("[]")
+  // Final results written on complete
+  results            Json?
+  status             String    @default("active") // "active" | "completed"
+  isPreview          Boolean   @default(false)
+
+  @@index([testId])
+  @@index([testId, isPreview])
+  @@index([status, isPreview])
+}
