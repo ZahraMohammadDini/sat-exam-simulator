@@ -20,13 +20,33 @@ export async function uploadImage(file: File): Promise<string> {
   const id = Math.random().toString(36).slice(2, 10);
   const pathname = `questions/${Date.now()}-${id}.${ext}`;
 
-  const { url } = await upload(pathname, compressed, {
-    access: 'public',
-    handleUploadUrl: '/api/admin/upload',
-    contentType: compressed.type,
-  });
+  try {
+    const { url } = await upload(pathname, compressed, {
+      access: 'public',
+      handleUploadUrl: '/api/admin/upload',
+      contentType: compressed.type,
+    });
+    return url;
+  } catch (error) {
+    // Surface the real error to the console with as much detail as possible
+    console.error('[uploadImage] upload failed:', error);
 
-  return url;
+    if (error instanceof Error) {
+      const enriched = error as Error & {
+        status?: number;
+        statusCode?: number;
+        cause?: unknown;
+      };
+      const status = enriched.status ?? enriched.statusCode;
+      const parts = [
+        error.message,
+        status != null ? `(HTTP ${status})` : null,
+        enriched.cause ? `cause: ${String(enriched.cause)}` : null,
+      ].filter(Boolean);
+      throw new Error(parts.join(' '));
+    }
+    throw new Error('Upload failed with unknown error');
+  }
 }
 
 // ── Paste-from-clipboard helper ──────────────────────────────────
