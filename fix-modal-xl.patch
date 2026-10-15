@@ -1,0 +1,32 @@
+From ef252ee91ac3a5769b0618ba2d8df74670bbb9e8 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Thu, 15 Oct 2026 08:30:36 +0000
+Subject: [PATCH] fix: add xl size to Modal component
+
+---
+ src/components/ui/Modal.tsx | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/components/ui/Modal.tsx b/src/components/ui/Modal.tsx
+index 31cd009..6a4632d 100644
+--- a/src/components/ui/Modal.tsx
++++ b/src/components/ui/Modal.tsx
+@@ -9,13 +9,14 @@ export interface ModalProps {
+   title?: string;
+   children: ReactNode;
+   footer?: ReactNode;
+-  size?: 'sm' | 'md' | 'lg';
++  size?: 'sm' | 'md' | 'lg' | 'xl';
+ }
+ 
+ const sizeMap = {
+   sm: 'max-w-sm',
+   md: 'max-w-md',
+   lg: 'max-w-2xl',
++  xl: 'max-w-5xl',
+ };
+ 
+ export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
+-- 
+2.43.0
+
