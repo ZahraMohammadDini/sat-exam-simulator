@@ -49,7 +49,7 @@ export function PassagePanel({
     }
   }, [localHighlights, question.id]);
 
-  // Escape clears the active highlighter
+  // Escape clears the active highlighter mode
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setActiveColor(null);
@@ -90,7 +90,6 @@ export function PassagePanel({
   // When a color is active, mouseup inside the passage auto-highlights
   const handlePassageMouseUp = () => {
     if (!activeColor) return;
-    // Let the browser settle the selection first
     setTimeout(() => commitHighlight(activeColor), 0);
   };
 
@@ -132,7 +131,9 @@ export function PassagePanel({
       <div
         className={clsx(
           'flex overflow-hidden rounded-md border bg-surface transition-colors',
-          activeColor ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border-subtle'
+          activeColor
+            ? 'border-accent/40 ring-1 ring-accent/20'
+            : 'border-border-subtle'
         )}
       >
         <div className="w-1 flex-shrink-0 bg-accent/30" aria-hidden />
@@ -147,46 +148,6 @@ export function PassagePanel({
           <KatexRenderer text={question.passage} />
         </div>
       </div>
-
-      {localHighlights.length > 0 && (
-        <div className="rounded-md border border-border-subtle bg-surface p-3">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Highlights ({localHighlights.length})
-            </p>
-            <button
-              type="button"
-              onClick={clearHighlights}
-              className="text-xs text-text-muted transition-colors hover:text-text-primary"
-            >
-              Clear all
-            </button>
-          </div>
-          <ul className="space-y-1 text-xs text-text-primary">
-            {localHighlights.map((h) => (
-              <li key={h.id} className="flex items-start gap-2 rounded px-2 py-1">
-                <span
-                  className="mt-0.5 inline-block h-3 w-3 flex-shrink-0 rounded-sm"
-                  style={{
-                    backgroundColor:
-                      h.color === 'yellow'
-                        ? '#fef08a'
-                        : h.color === 'blue'
-                        ? '#bfdbfe'
-                        : '#fbcfe8',
-                  }}
-                />
-                <div>
-                  <span>{h.text}</span>
-                  {h.note && (
-                    <div className="mt-0.5 text-text-muted">Note: {h.note}</div>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

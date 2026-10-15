@@ -252,17 +252,23 @@ export function ExamShell({
       );
       if (nextIdx < 0) throw new Error('Next module not found');
 
-      const nextModule = test.modules[nextIdx];
-      const isSectionBreak = nextModule.subject !== currentModule.subject;
-      const breakSeconds = isSectionBreak
-        ? (currentModule.breakAfterSeconds ?? 600)
-        : 0;
+      // Break is entirely manual: whatever the admin set on this module.
+      // Null / 0 means no break — go straight to the next module.
+      const breakSeconds = currentModule.breakAfterSeconds ?? 0;
 
-      setBreakState({
-        nextModuleIndex: nextIdx,
-        isFinal: false,
-        breakSeconds,
-      });
+      if (breakSeconds > 0) {
+        setBreakState({
+          nextModuleIndex: nextIdx,
+          isFinal: false,
+          breakSeconds,
+        });
+      } else {
+        setCurrentModuleIndex(nextIdx);
+        setCurrentQuestionIndex(0);
+        setCalculatorOpen(false);
+        setReferenceOpen(false);
+        setNavigatorOpen(false);
+      }
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
