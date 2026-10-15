@@ -47,6 +47,7 @@ const navItems = [
   },
   {
     label: 'Import / Export',
+    { href: '/admin/attempts', label: 'Attempts', icon: '⏱' },
     href: '/admin/import-export',
     icon: (
       <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
