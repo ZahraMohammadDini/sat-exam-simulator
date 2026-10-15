@@ -163,6 +163,7 @@ export const moduleInputSchema = z.object({
   order: z.number().int().min(0),
   adaptiveThreshold: z.number().int().min(0).optional().nullable(),
   routesTo: z.enum(['easy', 'hard']).optional().nullable(),
+  breakAfterSeconds: z.number().int().min(0).max(3600).optional().nullable(),
 });
 
 export type ModuleInput = z.infer<typeof moduleInputSchema>;

@@ -136,6 +136,7 @@ export async function POST(request: Request) {
           moduleNumber: mod.moduleNumber,
           difficulty: mod.difficulty,
           timeLimitSeconds: mod.timeLimitSeconds,
+          breakAfterSeconds: mod.breakAfterSeconds ?? null,
           order: mod.order,
           adaptiveThreshold: mod.adaptiveThreshold ?? null,
           routesTo: mod.routesTo ?? null,

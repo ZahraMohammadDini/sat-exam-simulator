@@ -65,6 +65,7 @@ model TestModule {
   moduleNumber      Int
   difficulty        String                @default("standard")
   timeLimitSeconds  Int
+  breakAfterSeconds Int?
   order             Int
   adaptiveThreshold Int?
   routesTo          String?

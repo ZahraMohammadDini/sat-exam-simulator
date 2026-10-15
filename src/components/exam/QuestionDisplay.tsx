@@ -1,6 +1,7 @@
 'use client';
 
 import type { PublicQuestion } from '@/types';
+import type { Highlight } from '@/lib/highlight-store';
 import { KatexRenderer } from '@/components/ui/KatexRenderer';
 import { AnswerChoices } from './AnswerChoices';
 import { GridInInput } from './GridInInput';
@@ -12,6 +13,8 @@ export interface QuestionDisplayProps {
   onAnswer: (value: string | null) => void;
   strikethrough?: string[];
   onToggleStrikethrough?: (id: string) => void;
+  highlights?: Highlight[];
+  onHighlightsChange?: (h: Highlight[]) => void;
   disabled?: boolean;
 }
 
@@ -21,6 +24,8 @@ export function QuestionDisplay({
   onAnswer,
   strikethrough = [],
   onToggleStrikethrough,
+  highlights = [],
+  onHighlightsChange,
   disabled,
 }: QuestionDisplayProps) {
   return (
@@ -28,7 +33,11 @@ export function QuestionDisplay({
       {/* Passage — left panel (if present) */}
       {(question.passage || (question.passageIsImage && question.passageImage)) && (
         <div className="lg:w-[48%] lg:flex-shrink-0">
-          <PassagePanel question={question} />
+          <PassagePanel
+            question={question}
+            highlights={highlights}
+            onHighlightsChange={onHighlightsChange}
+          />
         </div>
       )}
 

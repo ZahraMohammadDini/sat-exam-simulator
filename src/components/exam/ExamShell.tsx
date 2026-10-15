@@ -11,6 +11,7 @@ import type {
   PublicQuestion,
 } from '@/types';
 import { installCopyPrevention } from '@/lib/copy-prevention';
+import type { Highlight } from '@/lib/highlight-store';
 import { Button } from '@/components/ui/Button';
 import { QuestionDisplay } from './QuestionDisplay';
 import { QuestionNavigator } from './QuestionNavigator';
@@ -27,6 +28,7 @@ export interface ExamShellProps {
 interface BreakState {
   nextModuleIndex: number;
   isFinal: boolean;
+  breakSeconds: number;
 }
 
 const EMPTY_MODULE_STATE: SessionModuleState = { answers: {}, flagged: [] };
@@ -60,6 +62,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
     session.timeRemaining
   );
   const [strikethrough, setStrikethrough] = useState<Record<string, string[]>>({});
+  const [highlights, setHighlights] = useState<Record<string, Highlight[]>>({});
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -172,6 +175,11 @@ export function ExamShell({ test, session }: ExamShellProps) {
     void saveModule({ questionId: currentQuestion.id, flagged: nowFlagged });
   };
 
+  const handleHighlightsChange = (next: Highlight[]) => {
+    if (!currentQuestion) return;
+    setHighlights((prev) => ({ ...prev, [currentQuestion.id]: next }));
+  };
+
   const handleToggleStrike = (choiceId: string) => {
     if (!currentQuestion) return;
     setStrikethrough((prev) => {
@@ -220,7 +228,16 @@ export function ExamShell({ test, session }: ExamShellProps) {
         (m) => m.id === json.data.nextModuleId
       );
       if (nextIdx < 0) throw new Error('Next module not found');
-      setBreakState({ nextModuleIndex: nextIdx, isFinal: false });
+      const nextModule = test.modules[nextIdx];
+      const isSectionBreak = nextModule.subject !== currentModule.subject;
+      const breakSeconds = isSectionBreak
+        ? (currentModule.breakAfterSeconds ?? 600)
+        : 0;
+      setBreakState({
+        nextModuleIndex: nextIdx,
+        isFinal: false,
+        breakSeconds,
+      });
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -244,6 +261,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
         nextModuleTitle={nextModule ? formatModuleTitle(nextModule) : 'Next module'}
         onStart={beginNextModule}
         isFinal={breakState.isFinal}
+        breakSeconds={breakState.breakSeconds}
       />
     );
   }
@@ -301,6 +319,8 @@ export function ExamShell({ test, session }: ExamShellProps) {
                 onAnswer={handleAnswer}
                 strikethrough={currentStrike}
                 onToggleStrikethrough={handleToggleStrike}
+                highlights={highlights[currentQuestion.id] ?? []}
+                onHighlightsChange={handleHighlightsChange}
               />
             </div>
           ) : (
