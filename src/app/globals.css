@@ -59,10 +59,10 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Copy prevention — best-effort */
+/* Copy prevention — best-effort.
+   Note: passage-text is intentionally EXCLUDED so the highlighter can work. */
 .question-stem,
-.choice-text,
-.passage-text {
+.choice-text {
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
