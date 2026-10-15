@@ -255,10 +255,16 @@ export function TestEditor({ test }: { test: EditorTest }) {
         </div>
       </section>
 
-      <div className="text-center">
+      <div className="flex justify-center gap-6 text-sm">
+        <Link
+          href={`/admin/tests/${test.id}/analytics`}
+          className="text-text-muted hover:text-accent hover:underline"
+        >
+          View analytics
+        </Link>
         <Link
           href="/admin/tests"
-          className="text-sm text-text-muted hover:text-accent hover:underline"
+          className="text-text-muted hover:text-accent hover:underline"
         >
           ← Back to tests
         </Link>

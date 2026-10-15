@@ -192,6 +192,33 @@ export function AttemptsManager({ tests }: AttemptsManagerProps) {
     }
   };
 
+  const [cleaningUp, setCleaningUp] = useState(false);
+
+  const cleanupOrphans = async () => {
+    if (
+      !window.confirm(
+        'Delete all abandoned in-progress sessions older than 48 hours? Completed attempts are not affected.'
+      )
+    ) {
+      return;
+    }
+    setCleaningUp(true);
+    setError(null);
+    try {
+      const result = await adminPost<{ deleted: number }>(
+        '/api/admin/cleanup-orphans'
+      );
+      await load();
+      if (result.deleted === 0) {
+        setError('No abandoned sessions to clean up.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Cleanup failed');
+    } finally {
+      setCleaningUp(false);
+    }
+  };
+
   const anonymousCount = rows.filter(
     (r) => r.studentId == null && !r.isPreview
   ).length;
@@ -240,6 +267,15 @@ export function AttemptsManager({ tests }: AttemptsManagerProps) {
             disabled={busy || anonymousCount === 0}
           >
             Clear anonymous ({anonymousCount})
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={cleanupOrphans}
+            disabled={busy || cleaningUp}
+            title="Delete abandoned in-progress sessions older than 48 hours"
+          >
+            {cleaningUp ? 'Cleaning…' : 'Clean up abandoned'}
           </Button>
         </div>
       </div>

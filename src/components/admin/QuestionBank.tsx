@@ -216,9 +216,16 @@ export function QuestionBank() {
         <div className="text-sm text-text-muted">
           {loading ? 'Loading…' : `${questions.length} question${questions.length === 1 ? '' : 's'}`}
         </div>
-        <Link href="/admin/questions/new">
-          <Button size="sm">+ New question</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/questions/import">
+            <Button size="sm" variant="secondary">
+              Bulk import
+            </Button>
+          </Link>
+          <Link href="/admin/questions/new">
+            <Button size="sm">+ New question</Button>
+          </Link>
+        </div>
       </div>
 
       {loading ? (

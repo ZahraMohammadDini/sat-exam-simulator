@@ -158,7 +158,14 @@ export function StudentManager() {
             <tbody className="divide-y divide-border-subtle">
               {students.map((s) => (
                 <tr key={s.id}>
-                  <td className="px-4 py-3 font-medium">{s.name}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <a
+                      href={`/admin/students/${s.id}`}
+                      className="hover:text-accent hover:underline"
+                    >
+                      {s.name}
+                    </a>
+                  </td>
                   <td className="px-4 py-3 font-mono text-xs">{s.username}</td>
                   <td className="px-4 py-3 text-text-muted">{s.attemptCount}</td>
                   <td className="px-4 py-3">

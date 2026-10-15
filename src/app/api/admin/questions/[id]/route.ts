@@ -84,14 +84,25 @@ export async function DELETE(
   const admin = await requireAdmin();
   if (!admin) return unauthorized();
 
-  const used = await prisma.testModuleQuestion.count({
+  const used = await prisma.testModuleQuestion.findMany({
     where: { questionId: params.id },
+    include: {
+      module: {
+        include: { test: { select: { id: true, title: true } } },
+      },
+    },
   });
-  if (used > 0) {
+
+  if (used.length > 0) {
+    const testNames = Array.from(
+      new Set(used.map((u) => u.module.test.title))
+    );
+    const preview = testNames.slice(0, 3).join(', ');
+    const suffix = testNames.length > 3 ? ` and ${testNames.length - 3} more` : '';
     return NextResponse.json(
       {
         ok: false,
-        error: `Question is used in ${used} module${used === 1 ? '' : 's'}. Remove it from tests first, or unpublish instead.`,
+        error: `Question is used in ${used.length} module${used.length === 1 ? '' : 's'} across ${testNames.length} test${testNames.length === 1 ? '' : 's'}: ${preview}${suffix}. Remove it from these tests first, or unpublish instead.`,
       },
       { status: 409 }
     );
