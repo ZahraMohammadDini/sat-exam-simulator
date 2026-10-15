@@ -77,7 +77,7 @@ export default async function Home() {
               SAT Practice Exams
             </h1>
             <p className="mx-auto mt-3 max-w-md text-base text-text-secondary">
-              Full-length adaptive tests with timed modules, just like the real Bluebook experience.
+              Your gateway to tests in an environment like the Bluebook!
             </p>
           </div>
 
