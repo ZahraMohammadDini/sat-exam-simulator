@@ -247,6 +247,7 @@ export const importPayloadSchema = z.object({
         moduleNumber: z.number().int(),
         difficulty: moduleDifficultySchema,
         timeLimitSeconds: z.number().int(),
+        breakAfterSeconds: z.number().int().min(0).max(3600).nullable().optional(),
         order: z.number().int(),
         adaptiveThreshold: z.number().int().nullable().optional(),
         routesTo: z.enum(['easy', 'hard']).nullable().optional(),
