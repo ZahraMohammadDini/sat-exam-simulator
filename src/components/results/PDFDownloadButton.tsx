@@ -31,7 +31,7 @@ export function PDFDownloadButton({ targetRef, filename }: PDFDownloadButtonProp
       <Button variant="secondary" onClick={download} loading={busy}>
         Download PDF
       </Button>
-      {error && <span className="text-xs text-bluebook-wrong">{error}</span>}
+      {error && <span className="text-xs text-state-danger">{error}</span>}
     </div>
   );
 }

@@ -54,7 +54,7 @@ export function AdminLoginForm() {
             onChange={(e) => setUsername(e.target.value)}
             required
             autoFocus
-            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </label>
 
@@ -66,7 +66,7 @@ export function AdminLoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </label>
 

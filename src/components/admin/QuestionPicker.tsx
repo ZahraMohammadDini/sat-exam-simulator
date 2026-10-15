@@ -105,7 +105,7 @@ export function QuestionPicker({
           <select
             value={filterSubject}
             onChange={(e) => setFilterSubject(e.target.value)}
-            className="h-9 rounded-md border border-bluebook-border px-2 text-xs"
+            className="h-9 rounded-md border border-border-default px-2 text-xs"
           >
             <option value="">All subjects</option>
             <option value="math">Math</option>
@@ -114,7 +114,7 @@ export function QuestionPicker({
           <select
             value={filterDifficulty}
             onChange={(e) => setFilterDifficulty(e.target.value)}
-            className="h-9 rounded-md border border-bluebook-border px-2 text-xs"
+            className="h-9 rounded-md border border-border-default px-2 text-xs"
           >
             <option value="">All difficulties</option>
             <option value="easy">easy</option>
@@ -124,7 +124,7 @@ export function QuestionPicker({
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="h-9 rounded-md border border-bluebook-border px-2 text-xs"
+            className="h-9 rounded-md border border-border-default px-2 text-xs"
           >
             <option value="">All types</option>
             <option value="multiple_choice">multiple choice</option>
@@ -135,18 +135,18 @@ export function QuestionPicker({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search stem…"
-            className="h-9 rounded-md border border-bluebook-border px-2 text-xs"
+            className="h-9 rounded-md border border-border-default px-2 text-xs"
           />
         </div>
 
         {error && <Alert tone="error">{error}</Alert>}
 
         {loading ? (
-          <div className="p-6 text-center text-sm text-bluebook-muted">
+          <div className="p-6 text-center text-sm text-text-muted">
             Loading…
           </div>
         ) : questions.length === 0 ? (
-          <div className="p-6 text-center text-sm text-bluebook-muted">
+          <div className="p-6 text-center text-sm text-text-muted">
             No questions match. Create one in the Question Bank first.
           </div>
         ) : (
@@ -159,11 +159,11 @@ export function QuestionPicker({
               return (
                 <li
                   key={q.id}
-                  className="flex items-center justify-between gap-3 rounded-md border border-bluebook-border px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-md border border-border-default px-3 py-2"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm">{stem}</div>
-                    <div className="mt-0.5 flex gap-2 text-xs text-bluebook-muted">
+                    <div className="mt-0.5 flex gap-2 text-xs text-text-muted">
                       <span>
                         {q.subject === 'math' ? 'Math' : 'R&W'}
                       </span>

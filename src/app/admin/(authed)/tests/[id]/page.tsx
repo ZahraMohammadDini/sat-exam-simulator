@@ -69,7 +69,7 @@ export default async function EditTestPage({ params }: PageProps) {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold">Edit test</h1>
-        <p className="mt-1 text-sm text-bluebook-muted">{test.title}</p>
+        <p className="mt-1 text-sm text-text-muted">{test.title}</p>
       </header>
       <TestEditor test={serialized} />
     </div>

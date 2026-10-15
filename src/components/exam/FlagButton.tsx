@@ -22,9 +22,21 @@ export function FlagButton({ flagged, onToggle, className }: FlagButtonProps) {
       )}
       aria-pressed={flagged}
     >
-      <span aria-hidden className="text-sm leading-none">
-        {flagged ? '⚑' : '⚐'}
-      </span>
+      {/* Flag SVG icon */}
+      <svg
+        aria-hidden
+        className="h-3.5 w-3.5"
+        viewBox="0 0 16 16"
+        fill={flagged ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3 2v12M3 2h9l-2.5 4L12 10H3"
+        />
+      </svg>
       <span className="hidden sm:inline">{flagged ? 'Flagged' : 'Flag'}</span>
     </button>
   );

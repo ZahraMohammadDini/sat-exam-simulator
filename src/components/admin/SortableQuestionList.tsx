@@ -146,21 +146,21 @@ function SortableRow({
     <li
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 rounded-md border border-bluebook-border bg-white px-3 py-2"
+      className="flex items-center gap-3 rounded-md border border-border-default bg-surface px-3 py-2"
     >
       <button
         type="button"
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none rounded p-1 text-bluebook-muted hover:bg-bluebook-bg active:cursor-grabbing"
+        className="cursor-grab touch-none rounded p-1 text-text-muted hover:bg-surface-alt active:cursor-grabbing"
         aria-label="Drag to reorder"
       >
         ⋮⋮
       </button>
-      <span className="font-mono text-xs text-bluebook-muted">{number}.</span>
+      <span className="font-mono text-xs text-text-muted">{number}.</span>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm">{stemPreview}</div>
-        <div className="mt-0.5 flex gap-2 text-xs text-bluebook-muted">
+        <div className="mt-0.5 flex gap-2 text-xs text-text-muted">
           <span>{q.type === 'grid_in' ? 'grid-in' : 'multiple choice'}</span>
           <span>·</span>
           <span>{q.difficulty}</span>

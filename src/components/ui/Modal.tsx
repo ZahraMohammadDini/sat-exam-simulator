@@ -9,31 +9,19 @@ export interface ModalProps {
   title?: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  className?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-const sizeMap: Record<NonNullable<ModalProps['size']>, string> = {
+const sizeMap = {
   sm: 'max-w-sm',
-  md: 'max-w-lg',
+  md: 'max-w-md',
   lg: 'max-w-2xl',
-  xl: 'max-w-4xl',
 };
 
-export function Modal({
-  open,
-  onClose,
-  title,
-  children,
-  footer,
-  size = 'md',
-  className,
-}: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -46,40 +34,40 @@ export function Modal({
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={title}>
+      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden
       />
+
+      {/* Panel */}
       <div
         className={clsx(
-          'relative z-10 flex max-h-[90vh] w-full flex-col rounded-lg bg-surface shadow-modal',
-          sizeMap[size],
-          className
+          'relative z-10 flex w-full flex-col overflow-hidden rounded-xl bg-surface shadow-modal',
+          'max-h-[90vh]',
+          sizeMap[size]
         )}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-border-subtle px-5 py-3">
+          <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
             <h2 className="text-base font-semibold text-text-primary">{title}</h2>
             <button
               type="button"
               onClick={onClose}
-              className="rounded p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
+              className="rounded-lg p-1.5 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
               aria-label="Close"
             >
-              ✕
+              <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         )}
-        <div className="overflow-y-auto p-5">{children}</div>
+        <div className="flex-1 overflow-y-auto p-5">{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-border-subtle px-5 py-3">
+          <div className="flex justify-end gap-2 border-t border-border-subtle bg-surface-alt px-5 py-3">
             {footer}
           </div>
         )}

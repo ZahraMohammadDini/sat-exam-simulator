@@ -133,7 +133,7 @@ export function QuestionBank() {
         <select
           value={filterSubject}
           onChange={(e) => setFilterSubject(e.target.value)}
-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
+          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
         >
           <option value="">All subjects</option>
           <option value="math">Math</option>
@@ -142,7 +142,7 @@ export function QuestionBank() {
         <select
           value={filterDifficulty}
           onChange={(e) => setFilterDifficulty(e.target.value)}
-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
+          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
         >
           <option value="">All difficulties</option>
           <option value="easy">easy</option>
@@ -152,7 +152,7 @@ export function QuestionBank() {
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
+          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
         >
           <option value="">All types</option>
           <option value="multiple_choice">multiple choice</option>
@@ -161,7 +161,7 @@ export function QuestionBank() {
         <select
           value={filterPublished}
           onChange={(e) => setFilterPublished(e.target.value)}
-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
+          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
         >
           <option value="">Any status</option>
           <option value="true">Published</option>
@@ -172,13 +172,13 @@ export function QuestionBank() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search…"
-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
+          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
         />
       </div>
 
       {/* Bulk bar */}
       {selected.size > 0 && (
-        <div className="flex items-center justify-between rounded-md border border-bluebook-accent bg-blue-50 px-4 py-2 text-sm">
+        <div className="flex items-center justify-between rounded-md border border-accent bg-accent-subtle px-4 py-2 text-sm">
           <span>
             {selected.size} selected
           </span>
@@ -187,7 +187,7 @@ export function QuestionBank() {
               type="button"
               onClick={() => bulkPublish(true)}
               disabled={busyId === 'bulk'}
-              className="rounded border border-green-300 bg-white px-3 py-1 text-xs text-green-700 hover:bg-green-50 disabled:opacity-50"
+              className="rounded border border-green-300 bg-surface px-3 py-1 text-xs text-green-700 hover:bg-green-50 disabled:opacity-50"
             >
               Publish
             </button>
@@ -195,14 +195,14 @@ export function QuestionBank() {
               type="button"
               onClick={() => bulkPublish(false)}
               disabled={busyId === 'bulk'}
-              className="rounded border border-bluebook-border bg-white px-3 py-1 text-xs hover:bg-bluebook-bg disabled:opacity-50"
+              className="rounded border border-border-default bg-surface px-3 py-1 text-xs hover:bg-surface-alt disabled:opacity-50"
             >
               Unpublish
             </button>
             <button
               type="button"
               onClick={() => setSelected(new Set())}
-              className="rounded px-3 py-1 text-xs text-bluebook-muted hover:underline"
+              className="rounded px-3 py-1 text-xs text-text-muted hover:underline"
             >
               Clear
             </button>
@@ -213,7 +213,7 @@ export function QuestionBank() {
       {error && <Alert tone="error">{error}</Alert>}
 
       <div className="flex items-center justify-between">
-        <div className="text-sm text-bluebook-muted">
+        <div className="text-sm text-text-muted">
           {loading ? 'Loading…' : `${questions.length} question${questions.length === 1 ? '' : 's'}`}
         </div>
         <Link href="/admin/questions/new">
@@ -222,24 +222,24 @@ export function QuestionBank() {
       </div>
 
       {loading ? (
-        <div className="rounded-lg border border-bluebook-border bg-white p-8 text-center text-sm text-bluebook-muted">
+        <div className="rounded-lg border border-border-default bg-surface p-8 text-center text-sm text-text-muted">
           Loading…
         </div>
       ) : questions.length === 0 ? (
-        <div className="rounded-lg border border-bluebook-border bg-white p-8 text-center text-sm text-bluebook-muted">
+        <div className="rounded-lg border border-border-default bg-surface p-8 text-center text-sm text-text-muted">
           No questions match. Try clearing filters, or{' '}
           <Link
             href="/admin/questions/new"
-            className="text-bluebook-accent hover:underline"
+            className="text-accent hover:underline"
           >
             create one
           </Link>
           .
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-bluebook-border bg-white">
+        <div className="overflow-hidden rounded-lg border border-border-default bg-surface">
           <table className="w-full text-sm">
-            <thead className="bg-bluebook-bg text-left text-xs uppercase tracking-wide text-bluebook-muted">
+            <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-text-muted">
               <tr>
                 <th className="w-8 px-3 py-2">
                   <input
@@ -248,7 +248,7 @@ export function QuestionBank() {
                       questions.length > 0 && selected.size === questions.length
                     }
                     onChange={toggleAll}
-                    className="h-4 w-4 rounded border-bluebook-border text-bluebook-accent focus:ring-bluebook-accent"
+                    className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent/20"
                   />
                 </th>
                 <th className="px-3 py-2 font-medium">Stem</th>
@@ -258,7 +258,7 @@ export function QuestionBank() {
                 <th className="w-40 px-3 py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-bluebook-border">
+            <tbody className="divide-y divide-border-subtle">
               {questions.map((q) => {
                 const isSel = selected.has(q.id);
                 const stem = q.stemIsImage
@@ -274,16 +274,16 @@ export function QuestionBank() {
                         type="checkbox"
                         checked={isSel}
                         onChange={() => toggleSelected(q.id)}
-                        className="h-4 w-4 rounded border-bluebook-border text-bluebook-accent focus:ring-bluebook-accent"
+                        className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent/20"
                       />
                     </td>
                     <td className="px-3 py-3">
                       <Link
                         href={`/admin/questions/${q.id}`}
-                        className="hover:text-bluebook-accent hover:underline"
+                        className="hover:text-accent hover:underline"
                       >
                         <div className="truncate">{stem}</div>
-                        <div className="mt-0.5 flex gap-2 text-xs text-bluebook-muted">
+                        <div className="mt-0.5 flex gap-2 text-xs text-text-muted">
                           <span>{q.subject === 'math' ? 'Math' : 'R&W'}</span>
                           {q.domain && (
                             <>
@@ -309,7 +309,7 @@ export function QuestionBank() {
                           type="button"
                           onClick={() => duplicate(q)}
                           disabled={busyId === q.id}
-                          className="text-xs text-bluebook-accent hover:underline disabled:opacity-50"
+                          className="text-xs text-accent hover:underline disabled:opacity-50"
                         >
                           Duplicate
                         </button>

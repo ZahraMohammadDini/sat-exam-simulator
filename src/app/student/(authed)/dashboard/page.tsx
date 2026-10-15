@@ -32,14 +32,14 @@ export default async function StudentDashboardPage() {
     }),
   ]);
 
-  const testSummaries = tests.map((t) => ({
+  const testSummaries = tests.map((t: typeof tests[number]) => ({
     id: t.id,
     title: t.title,
     description: t.description,
     moduleCount: t._count.modules,
   }));
 
-  const attempts = sessions.map((s) => {
+  const attempts = sessions.map((s: typeof sessions[number]) => {
     const r = s.results as ResultShape | null;
     const score =
       r &&

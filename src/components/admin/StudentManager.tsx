@@ -136,17 +136,17 @@ export function StudentManager() {
       {error && <Alert tone="error">{error}</Alert>}
 
       {loading ? (
-        <div className="rounded-lg border border-bluebook-border bg-white p-6 text-center text-sm text-bluebook-muted">
+        <div className="rounded-lg border border-border-default bg-surface p-6 text-center text-sm text-text-muted">
           Loading…
         </div>
       ) : students.length === 0 ? (
-        <div className="rounded-lg border border-bluebook-border bg-white p-6 text-center text-sm text-bluebook-muted">
+        <div className="rounded-lg border border-border-default bg-surface p-6 text-center text-sm text-text-muted">
           No students yet. Create one to get started.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-bluebook-border bg-white">
+        <div className="overflow-hidden rounded-lg border border-border-default bg-surface">
           <table className="w-full text-sm">
-            <thead className="bg-bluebook-bg text-left text-xs uppercase tracking-wide text-bluebook-muted">
+            <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-text-muted">
               <tr>
                 <th className="px-4 py-2 font-medium">Name</th>
                 <th className="px-4 py-2 font-medium">Username</th>
@@ -155,12 +155,12 @@ export function StudentManager() {
                 <th className="px-4 py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-bluebook-border">
+            <tbody className="divide-y divide-border-subtle">
               {students.map((s) => (
                 <tr key={s.id}>
                   <td className="px-4 py-3 font-medium">{s.name}</td>
                   <td className="px-4 py-3 font-mono text-xs">{s.username}</td>
-                  <td className="px-4 py-3 text-bluebook-muted">{s.attemptCount}</td>
+                  <td className="px-4 py-3 text-text-muted">{s.attemptCount}</td>
                   <td className="px-4 py-3">
                     <Badge tone={s.isActive ? 'success' : 'neutral'}>
                       {s.isActive ? 'active' : 'disabled'}
@@ -174,14 +174,14 @@ export function StudentManager() {
                           setResetFor(s);
                           setResetPassword(randomPassword());
                         }}
-                        className="text-xs text-bluebook-accent hover:underline"
+                        className="text-xs text-accent hover:underline"
                       >
                         Reset password
                       </button>
                       <button
                         type="button"
                         onClick={() => toggleActive(s)}
-                        className="text-xs text-bluebook-muted hover:underline"
+                        className="text-xs text-text-muted hover:underline"
                       >
                         {s.isActive ? 'Disable' : 'Enable'}
                       </button>
@@ -233,7 +233,7 @@ export function StudentManager() {
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
               placeholder="Jane Doe"
-              className="h-10 w-full rounded-md border border-bluebook-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+              className="h-10 w-full rounded-md border border-border-default px-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
           </label>
           <label className="block space-y-1">
@@ -243,9 +243,9 @@ export function StudentManager() {
               value={createUsername}
               onChange={(e) => setCreateUsername(e.target.value)}
               placeholder="jane.doe"
-              className="h-10 w-full rounded-md border border-bluebook-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+              className="h-10 w-full rounded-md border border-border-default px-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
-            <span className="text-xs text-bluebook-muted">
+            <span className="text-xs text-text-muted">
               Letters, numbers, dot, dash, underscore. 3–60 chars.
             </span>
           </label>
@@ -256,7 +256,7 @@ export function StudentManager() {
                 type="text"
                 value={createPassword}
                 onChange={(e) => setCreatePassword(e.target.value)}
-                className="h-10 flex-1 rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+                className="h-10 flex-1 rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
               <Button
                 type="button"
@@ -266,7 +266,7 @@ export function StudentManager() {
                 Regenerate
               </Button>
             </div>
-            <span className="text-xs text-bluebook-muted">
+            <span className="text-xs text-text-muted">
               Share this with the student. They can&apos;t change it themselves.
             </span>
           </label>
@@ -301,7 +301,7 @@ export function StudentManager() {
                 type="text"
                 value={resetPassword}
                 onChange={(e) => setResetPassword(e.target.value)}
-                className="h-10 flex-1 rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+                className="h-10 flex-1 rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
               <Button
                 type="button"

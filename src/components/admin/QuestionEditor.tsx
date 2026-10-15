@@ -254,7 +254,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
       {error && <Alert tone="error">{error}</Alert>}
 
       {/* Meta */}
-      <section className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
+      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
         <h2 className="text-base font-semibold">Question details</h2>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -263,7 +263,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
             <select
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+              className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               <option value="math">Math</option>
               <option value="reading_writing">Reading &amp; Writing</option>
@@ -276,7 +276,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
               onChange={(e) =>
                 setType(e.target.value as 'multiple_choice' | 'grid_in')
               }
-              className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+              className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               <option value="multiple_choice">Multiple choice</option>
               <option value="grid_in">Grid-in</option>
@@ -287,7 +287,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
-              className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+              className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               <option value="easy">easy</option>
               <option value="medium">medium</option>
@@ -301,7 +301,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
               placeholder="Algebra"
-              className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+              className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
           </label>
         </div>
@@ -313,7 +313,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
             value={tagsText}
             onChange={(e) => setTagsText(e.target.value)}
             placeholder="linear-equations, slope"
-            className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+            className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </label>
 
@@ -322,14 +322,14 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
             type="checkbox"
             checked={isPublished}
             onChange={(e) => setIsPublished(e.target.checked)}
-            className="h-4 w-4 rounded border-bluebook-border text-bluebook-accent focus:ring-bluebook-accent"
+            className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent/20"
           />
           Published (visible in bank)
         </label>
       </section>
 
       {/* Passage */}
-      <section className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
+      <section className="rounded-lg border border-border-default bg-surface p-6 shadow-card">
         <ImageField
           label="Passage (optional)"
           value={passage}
@@ -341,7 +341,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
       </section>
 
       {/* Stem */}
-      <section className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
+      <section className="rounded-lg border border-border-default bg-surface p-6 shadow-card">
         <ImageField
           label="Question stem"
           value={stem}
@@ -352,12 +352,12 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
       </section>
 
       {/* Choices or grid-in */}
-      <section className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
+      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
         {type === 'multiple_choice' ? (
           <>
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">Answer choices</h2>
-              <span className="text-xs text-bluebook-muted">
+              <span className="text-xs text-text-muted">
                 Click the circle to mark the correct answer
               </span>
             </div>
@@ -372,7 +372,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
                       'rounded-md border p-3',
                       isCorrect
                         ? 'border-green-300 bg-green-50'
-                        : 'border-bluebook-border'
+                        : 'border-border-default'
                     )}
                   >
                     <div className="mb-2 flex items-center justify-between">
@@ -384,25 +384,25 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
                             'flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold',
                             isCorrect
                               ? 'border-green-600 bg-green-600 text-white'
-                              : 'border-bluebook-border text-bluebook-muted hover:border-bluebook-accent'
+                              : 'border-border-default text-text-muted hover:border-accent'
                           )}
                           aria-label={`Mark ${c.id} correct`}
                         >
                           {c.id}
                         </button>
-                        <span className="text-xs text-bluebook-muted">
+                        <span className="text-xs text-text-muted">
                           {isCorrect ? 'Correct answer' : `Choice ${c.id}`}
                         </span>
                       </div>
-                      <div className="inline-flex rounded-md border border-bluebook-border bg-white p-0.5 text-xs">
+                      <div className="inline-flex rounded-md border border-border-default bg-surface p-0.5 text-xs">
                         <button
                           type="button"
                           onClick={() => setChoiceMode(c.id, 'text')}
                           className={clsx(
                             'rounded px-2 py-0.5',
                             c.mode === 'text'
-                              ? 'bg-bluebook-accent text-white'
-                              : 'text-bluebook-muted'
+                              ? 'bg-accent text-white'
+                              : 'text-text-muted'
                           )}
                         >
                           Text
@@ -413,8 +413,8 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
                           className={clsx(
                             'rounded px-2 py-0.5',
                             c.mode === 'image'
-                              ? 'bg-bluebook-accent text-white'
-                              : 'text-bluebook-muted'
+                              ? 'bg-accent text-white'
+                              : 'text-text-muted'
                           )}
                         >
                           Image
@@ -427,7 +427,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
                         onChange={(e) => updateChoice(c.id, { text: e.target.value })}
                         rows={2}
                         placeholder={`Choice ${c.id}`}
-                        className="w-full rounded-md border border-bluebook-border px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+                        className="w-full rounded-md border border-border-default px-3 py-2 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
                       />
                     ) : (
                       <MiniImageField
@@ -450,9 +450,9 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
                 value={gridInAnswer}
                 onChange={(e) => setGridInAnswer(e.target.value)}
                 placeholder="19"
-                className="h-10 w-48 rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+                className="h-10 w-48 rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
-              <span className="text-bluebook-muted">
+              <span className="text-text-muted">
                 Integers, decimals, negatives, or fractions (e.g. 3, 3.5, -2, 3/4).
                 Grid-in questions have no choices.
               </span>
@@ -462,7 +462,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
       </section>
 
       {/* Explanation */}
-      <section className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
+      <section className="rounded-lg border border-border-default bg-surface p-6 shadow-card">
         <ImageField
           label="Explanation (optional)"
           value={explanation}
@@ -478,7 +478,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
         <button
           type="button"
           onClick={() => setPreview((p) => !p)}
-          className="rounded-md border border-bluebook-border bg-white px-3 py-1.5 text-sm hover:bg-bluebook-bg"
+          className="rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm hover:bg-surface-alt"
         >
           {preview ? 'Hide preview' : 'Show preview'}
         </button>
@@ -537,13 +537,13 @@ function MiniImageField({
           <img
             src={value}
             alt="Choice"
-            className="max-h-32 rounded border border-bluebook-border"
+            className="max-h-32 rounded border border-border-default"
           />
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="rounded border border-bluebook-border px-2 py-1 text-xs hover:bg-bluebook-bg"
+              className="rounded border border-border-default px-2 py-1 text-xs hover:bg-surface-alt"
             >
               Replace
             </button>
@@ -561,7 +561,7 @@ function MiniImageField({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={busy}
-          className="rounded border-2 border-dashed border-bluebook-border px-4 py-3 text-xs text-bluebook-muted hover:border-bluebook-accent hover:bg-blue-50"
+          className="rounded border-2 border-dashed border-border-default px-4 py-3 text-xs text-text-muted hover:border-accent hover:bg-blue-50"
         >
           {busy ? 'Uploading…' : 'Upload image'}
         </button>
@@ -601,15 +601,15 @@ function QuestionPreview({
   explanation: ImageFieldValue;
 }) {
   return (
-    <section className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
+    <section className="rounded-lg border border-border-default bg-surface p-6 shadow-card">
       <h2 className="mb-3 text-base font-semibold">Preview (as students see it)</h2>
-      <div className="rounded-md border border-bluebook-border bg-bluebook-bg p-4">
+      <div className="rounded-md border border-border-default bg-surface-alt p-4">
         {passage.isImage && passage.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={passage.imageUrl}
             alt="Passage"
-            className="mb-4 w-full rounded border border-bluebook-border bg-white"
+            className="mb-4 w-full rounded border border-border-default bg-surface"
           />
         )}
         {!passage.isImage && passage.text && (
@@ -621,7 +621,7 @@ function QuestionPreview({
           <img
             src={stem.imageUrl}
             alt="Stem"
-            className="mb-4 max-h-64 rounded border border-bluebook-border bg-white"
+            className="mb-4 max-h-64 rounded border border-border-default bg-surface"
           />
         ) : (
           <KatexRenderer text={stem.text} className="mb-4 text-base" />
@@ -633,13 +633,13 @@ function QuestionPreview({
               <li
                 key={c.id}
                 className={clsx(
-                  'flex items-start gap-3 rounded-md border bg-white p-3',
+                  'flex items-start gap-3 rounded-md border bg-surface p-3',
                   correctAnswer === c.id
                     ? 'border-green-300'
-                    : 'border-bluebook-border'
+                    : 'border-border-default'
                 )}
               >
-                <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border border-bluebook-border text-xs font-bold">
+                <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border border-border-default text-xs font-bold">
                   {c.id}
                 </span>
                 {c.mode === 'text' ? (
@@ -652,7 +652,7 @@ function QuestionPreview({
                     className="max-h-24 rounded"
                   />
                 ) : (
-                  <span className="text-xs text-bluebook-muted">
+                  <span className="text-xs text-text-muted">
                     (no image yet)
                   </span>
                 )}
@@ -660,19 +660,19 @@ function QuestionPreview({
             ))}
           </ul>
         ) : (
-          <div className="rounded-md border border-bluebook-border bg-white p-3 text-sm">
+          <div className="rounded-md border border-border-default bg-surface p-3 text-sm">
             <div className="font-mono">
               {gridInAnswer || '(no answer set)'}
             </div>
-            <div className="mt-1 text-xs text-bluebook-muted">
+            <div className="mt-1 text-xs text-text-muted">
               Grid-in question — students type a number.
             </div>
           </div>
         )}
 
         {(explanation.text || explanation.imageUrl) && (
-          <div className="mt-4 rounded-md border border-bluebook-border bg-white p-3">
-            <div className="mb-1 text-xs font-medium uppercase text-bluebook-muted">
+          <div className="mt-4 rounded-md border border-border-default bg-surface p-3">
+            <div className="mb-1 text-xs font-medium uppercase text-text-muted">
               Explanation
             </div>
             {explanation.isImage && explanation.imageUrl ? (
@@ -680,7 +680,7 @@ function QuestionPreview({
               <img
                 src={explanation.imageUrl}
                 alt="Explanation"
-                className="max-w-full rounded border border-bluebook-border"
+                className="max-w-full rounded border border-border-default"
               />
             ) : (
               <KatexRenderer text={explanation.text} className="text-sm" />

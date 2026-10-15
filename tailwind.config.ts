@@ -28,6 +28,8 @@ const config: Config = {
         'state-warning-bg': '#fffbeb',
         'flag-active': '#dc2626',
         highlight: '#fef08a',
+        'border-focus': '#0b5fff',
+        'accent-hover': '#0a4fd6',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
@@ -52,6 +54,8 @@ const config: Config = {
         sm: '4px',
         md: '8px',
         lg: '12px',
+        xl: '16px',
+        '2xl': '20px',
       },
     },
   },

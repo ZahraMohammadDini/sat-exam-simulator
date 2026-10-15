@@ -1,0 +1,3138 @@
+From 27eb3e262eb7f852af1793447eba8d96b912fa57 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Thu, 15 Oct 2026 08:28:21 +0000
+Subject: [PATCH] =?UTF-8?q?feat:=20full=20UI=20polish=20pass=20=E2=80=94?=
+ =?UTF-8?q?=20exam=20interface=20+=20admin=20panel?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Exam interface
+- ExamHeader: replace emoji with SVG calculator/hamburger icons; white bg
+  creates depth against gray canvas; header now has shadow-card
+- ExamTimer: SVG clock icon; coloured bg pill per state (neutral/warning/danger);
+  clock icon pulses when under 60 s
+- FlagButton: replace unicode flag with clean SVG flag that fills on active
+- QuestionNavigator: add answered/total progress bar + percentage at top;
+  tighter 5-col grid with h-9 buttons; improved legend with current indicator
+- DesmosCalculator: draggable via grip-dots header; SVG close icon;
+  spinner replaces text loading state; positioned from bottom-right until dragged
+- GridInInput: larger 56px centered input; decorative slot underlines;
+  format hints table (Integer/Decimal/Negative/Fraction with code examples);
+  Student-Produced Response label with divider line
+- ConfirmSubmitDialog: coloured status banner (warning/success) with icon
+  shows unanswered count; clearer non-reversible copy
+
+Core UI components
+- Button: active states; consistent gap; rounded-lg for lg size
+- Modal: SVG close icon; footer gets surface-alt bg; rounded-xl panel
+- Badge: rounded-full; consistent border opacity values
+- Alert: SVG icons per tone (info/success/warning/error); rounded-lg
+
+Admin panel — all files
+- Bulk-replaced every remaining bluebook-* class with correct design tokens
+  (border-default, bg-surface, text-text-muted, text-accent, bg-surface-alt,
+  bg-surface-hover, focus:ring-accent/20 etc.) across 22 files
+- AdminSidebar: SVG nav icons (dashboard/tests/questions/students/import);
+  avatar chip with initial; sign-out icon button; ADMIN pill badge
+- Admin dashboard: completion-rate stat; accent-coloured primary stat;
+  rounded-xl cards; hover rows on attempts table; date formatting
+- TestListAdmin: rounded-xl list card; hover rows; polished action buttons
+  with proper token colours; line-clamp description
+- ImageField: SVG upload icon in drop zone; token-correct toggle pill;
+  object-contain preview image; polished Remove/Replace buttons
+- tailwind.config.ts: add border-focus, accent-hover aliases; add xl/2xl
+  border-radius tokens
+---
+ src/app/admin/(authed)/dashboard/page.tsx     | 170 ++++++---------
+ src/app/admin/(authed)/import-export/page.tsx |   2 +-
+ src/app/admin/(authed)/layout.tsx             |   8 +-
+ .../admin/(authed)/questions/[id]/page.tsx    |   2 +-
+ src/app/admin/(authed)/questions/new/page.tsx |   2 +-
+ src/app/admin/(authed)/questions/page.tsx     |   2 +-
+ src/app/admin/(authed)/students/page.tsx      |   2 +-
+ src/app/admin/(authed)/tests/[id]/page.tsx    |   2 +-
+ src/app/admin/(authed)/tests/new/page.tsx     |   2 +-
+ src/app/admin/(authed)/tests/page.tsx         |   2 +-
+ src/app/student/(authed)/dashboard/page.tsx   |   4 +-
+ src/components/admin/AdminLoginForm.tsx       |   4 +-
+ src/components/admin/AdminSidebar.tsx         | 171 +++++++++------
+ src/components/admin/ImageField.tsx           | 165 +++++---------
+ src/components/admin/ImportExportPanel.tsx    |  16 +-
+ src/components/admin/ModuleEditor.tsx         |  22 +-
+ src/components/admin/QuestionBank.tsx         |  42 ++--
+ src/components/admin/QuestionEditor.tsx       |  80 +++----
+ src/components/admin/QuestionPicker.tsx       |  16 +-
+ src/components/admin/SortableQuestionList.tsx |   8 +-
+ src/components/admin/StudentManager.tsx       |  28 +--
+ src/components/admin/TestEditor.tsx           |  20 +-
+ src/components/admin/TestListAdmin.tsx        | 204 ++++++++----------
+ src/components/admin/TestWizard.tsx           |  14 +-
+ src/components/exam/ConfirmSubmitDialog.tsx   |  48 ++++-
+ src/components/exam/DesmosCalculator.tsx      | 134 +++++++-----
+ src/components/exam/ExamHeader.tsx            |  27 ++-
+ src/components/exam/ExamTimer.tsx             |  31 ++-
+ src/components/exam/FlagButton.tsx            |  18 +-
+ src/components/exam/GridInInput.tsx           |  90 +++++---
+ src/components/exam/QuestionNavigator.tsx     |  61 ++++--
+ src/components/results/PDFDownloadButton.tsx  |   2 +-
+ src/components/ui/Alert.tsx                   |  28 ++-
+ src/components/ui/Badge.tsx                   |  15 +-
+ src/components/ui/Button.tsx                  |  74 ++++---
+ src/components/ui/Modal.tsx                   |  50 ++---
+ tailwind.config.ts                            |   4 +
+ 37 files changed, 830 insertions(+), 740 deletions(-)
+
+diff --git a/src/app/admin/(authed)/dashboard/page.tsx b/src/app/admin/(authed)/dashboard/page.tsx
+index cc81d2c..7704639 100644
+--- a/src/app/admin/(authed)/dashboard/page.tsx
++++ b/src/app/admin/(authed)/dashboard/page.tsx
+@@ -18,20 +18,15 @@ interface RecentSession {
+ function readScore(results: unknown): { correct: number; total: number } | null {
+   if (results == null || typeof results !== 'object') return null;
+   const r = results as { totalCorrect?: unknown; totalQuestions?: unknown };
+-  if (typeof r.totalCorrect !== 'number' || typeof r.totalQuestions !== 'number') {
+-    return null;
+-  }
++  if (typeof r.totalCorrect !== 'number' || typeof r.totalQuestions !== 'number') return null;
+   return { correct: r.totalCorrect, total: r.totalQuestions };
+ }
+ 
+ export default async function DashboardPage() {
+   const [
+-    testsTotal,
+-    testsPublished,
+-    questionsTotal,
+-    questionsPublished,
+-    sessionsTotal,
+-    sessionsCompleted,
++    testsTotal, testsPublished,
++    questionsTotal, questionsPublished,
++    sessionsTotal, sessionsCompleted,
+     recentRows,
+   ] = await Promise.all([
+     prisma.test.count(),
+@@ -43,118 +38,95 @@ export default async function DashboardPage() {
+     prisma.testSession.findMany({
+       where: { isPreview: false },
+       orderBy: { startedAt: 'desc' },
+-      take: 6,
++      take: 8,
+       select: {
+-        id: true,
+-        startedAt: true,
+-        completedAt: true,
+-        status: true,
+-        isPreview: true,
+-        results: true,
++        id: true, startedAt: true, completedAt: true,
++        status: true, isPreview: true, results: true,
+         test: { select: { title: true } },
+       },
+     }),
+   ]);
+ 
+-  const recent: RecentSession[] = recentRows.map((r) => ({
+-    id: r.id,
+-    testTitle: r.test.title,
+-    startedAt: r.startedAt,
+-    completedAt: r.completedAt,
+-    status: r.status,
+-    isPreview: r.isPreview,
+-    results: r.results,
++  const recent: RecentSession[] = recentRows.map((r: typeof recentRows[number]) => ({
++    id: r.id, testTitle: r.test.title, startedAt: r.startedAt,
++    completedAt: r.completedAt, status: r.status,
++    isPreview: r.isPreview, results: r.results,
+   }));
+ 
+   return (
+     <div className="space-y-8">
+-      <header className="flex flex-wrap items-center justify-between gap-3">
++      <header className="flex flex-wrap items-start justify-between gap-3">
+         <div>
+-          <h1 className="text-2xl font-bold">Dashboard</h1>
+-          <p className="mt-1 text-sm text-bluebook-muted">
++          <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
++          <p className="mt-1 text-sm text-text-muted">
+             Overview of your tests, questions, and attempts.
+           </p>
+         </div>
+         <div className="flex gap-2">
+-          <Link href="/admin/tests/new">
+-            <Button>New test</Button>
+-          </Link>
+-          <Link href="/admin/questions/new">
+-            <Button variant="secondary">New question</Button>
+-          </Link>
++          <Link href="/admin/tests/new"><Button>+ New test</Button></Link>
++          <Link href="/admin/questions/new"><Button variant="secondary">+ New question</Button></Link>
+         </div>
+       </header>
+ 
++      {/* Stat cards */}
+       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+-        <StatCard
+-          label="Tests"
+-          primary={testsTotal}
+-          secondary={`${testsPublished} published`}
+-        />
+-        <StatCard
+-          label="Questions"
+-          primary={questionsTotal}
+-          secondary={`${questionsPublished} published`}
+-        />
+-        <StatCard
+-          label="Attempts"
+-          primary={sessionsTotal}
+-          secondary="excluding previews"
+-        />
++        <StatCard label="Tests" primary={testsTotal} secondary={`${testsPublished} published`} accent />
++        <StatCard label="Questions" primary={questionsTotal} secondary={`${questionsPublished} published`} />
++        <StatCard label="Attempts" primary={sessionsTotal} secondary="excluding previews" />
+         <StatCard
+           label="Completed"
+           primary={sessionsCompleted}
+-          secondary={`of ${sessionsTotal}`}
++          secondary={sessionsTotal > 0 ? `${Math.round((sessionsCompleted / sessionsTotal) * 100)}% rate` : 'of 0'}
+         />
+       </div>
+ 
++      {/* Recent attempts */}
+       <section>
+-        <h2 className="mb-3 text-lg font-semibold">Recent attempts</h2>
++        <div className="mb-3 flex items-center justify-between">
++          <h2 className="text-base font-semibold text-text-primary">Recent attempts</h2>
++          <Link href="/admin/students" className="text-xs text-accent hover:underline">
++            View all →
++          </Link>
++        </div>
+         {recent.length === 0 ? (
+-          <div className="rounded-lg border border-bluebook-border bg-white p-6 text-center text-sm text-bluebook-muted">
++          <div className="rounded-xl border border-border-subtle bg-surface p-8 text-center text-sm text-text-muted">
+             No attempts yet. Share a test password to get started.
+           </div>
+         ) : (
+-          <ul className="divide-y divide-bluebook-border overflow-hidden rounded-lg border border-bluebook-border bg-white">
+-            {recent.map((r) => {
+-              const score = readScore(r.results);
+-              return (
+-                <li
+-                  key={r.id}
+-                  className="flex items-center justify-between gap-4 px-4 py-3"
+-                >
+-                  <div className="min-w-0">
+-                    <div className="truncate text-sm font-medium">
+-                      {r.testTitle}
++          <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-card">
++            <ul className="divide-y divide-border-subtle">
++              {recent.map((r) => {
++                const score = readScore(r.results);
++                const pct = score ? Math.round((score.correct / score.total) * 100) : null;
++                return (
++                  <li key={r.id} className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-surface-hover">
++                    <div className="min-w-0">
++                      <div className="truncate text-sm font-medium text-text-primary">{r.testTitle}</div>
++                      <div className="mt-0.5 text-xs text-text-muted">
++                        {new Date(r.startedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
++                      </div>
+                     </div>
+-                    <div className="mt-0.5 text-xs text-bluebook-muted">
+-                      {new Date(r.startedAt).toLocaleString()}
++                    <div className="flex flex-shrink-0 items-center gap-3">
++                      {score ? (
++                        <span className="font-mono text-sm text-text-primary">
++                          {score.correct}/{score.total}
++                          <span className="ml-1 text-text-muted">({pct}%)</span>
++                        </span>
++                      ) : (
++                        <span className="text-xs text-text-muted">—</span>
++                      )}
++                      <Badge tone={r.status === 'completed' ? 'success' : 'warning'}>{r.status}</Badge>
++                      {r.status === 'completed' && (
++                        <Link href={`/results/${r.id}`} className="text-xs font-medium text-accent hover:underline">
++                          View
++                        </Link>
++                      )}
+                     </div>
+-                  </div>
+-                  <div className="flex items-center gap-3">
+-                    {score ? (
+-                      <span className="font-mono text-sm">
+-                        {score.correct}/{score.total}
+-                      </span>
+-                    ) : (
+-                      <span className="text-xs text-bluebook-muted">—</span>
+-                    )}
+-                    <Badge tone={r.status === 'completed' ? 'success' : 'warning'}>
+-                      {r.status}
+-                    </Badge>
+-                    {r.status === 'completed' && (
+-                      <Link
+-                        href={`/results/${r.id}`}
+-                        className="text-xs text-bluebook-accent hover:underline"
+-                      >
+-                        View
+-                      </Link>
+-                    )}
+-                  </div>
+-                </li>
+-              );
+-            })}
+-          </ul>
++                  </li>
++                );
++              })}
++            </ul>
++          </div>
+         )}
+       </section>
+     </div>
+@@ -162,21 +134,15 @@ export default async function DashboardPage() {
+ }
+ 
+ function StatCard({
+-  label,
+-  primary,
+-  secondary,
+-}: {
+-  label: string;
+-  primary: number;
+-  secondary: string;
+-}) {
++  label, primary, secondary, accent,
++}: { label: string; primary: number; secondary: string; accent?: boolean }) {
+   return (
+-    <div className="rounded-lg border border-bluebook-border bg-white p-4 shadow-card">
+-      <div className="text-xs uppercase tracking-wide text-bluebook-muted">
+-        {label}
++    <div className="rounded-xl border border-border-subtle bg-surface p-5 shadow-card">
++      <div className="text-xs font-semibold uppercase tracking-wider text-text-muted">{label}</div>
++      <div className={`mt-1.5 text-3xl font-bold ${accent ? 'text-accent' : 'text-text-primary'}`}>
++        {primary}
+       </div>
+-      <div className="mt-1 text-3xl font-bold">{primary}</div>
+-      <div className="mt-0.5 text-xs text-bluebook-muted">{secondary}</div>
++      <div className="mt-0.5 text-xs text-text-muted">{secondary}</div>
+     </div>
+   );
+ }
+diff --git a/src/app/admin/(authed)/import-export/page.tsx b/src/app/admin/(authed)/import-export/page.tsx
+index b15bdcf..a41853e 100644
+--- a/src/app/admin/(authed)/import-export/page.tsx
++++ b/src/app/admin/(authed)/import-export/page.tsx
+@@ -13,7 +13,7 @@ export default async function ImportExportPage() {
+     <div className="space-y-6">
+       <header>
+         <h1 className="text-2xl font-bold">Import / Export</h1>
+-        <p className="mt-1 text-sm text-bluebook-muted">
++        <p className="mt-1 text-sm text-text-muted">
+           Move tests between environments as JSON.
+         </p>
+       </header>
+diff --git a/src/app/admin/(authed)/layout.tsx b/src/app/admin/(authed)/layout.tsx
+index 20d515b..29996a8 100644
+--- a/src/app/admin/(authed)/layout.tsx
++++ b/src/app/admin/(authed)/layout.tsx
+@@ -5,16 +5,12 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
+ 
+ export const dynamic = 'force-dynamic';
+ 
+-export default async function AuthedAdminLayout({
+-  children,
+-}: {
+-  children: ReactNode;
+-}) {
++export default async function AuthedAdminLayout({ children }: { children: ReactNode }) {
+   const admin = await requireAdmin();
+   if (!admin) redirect('/admin');
+ 
+   return (
+-    <div className="flex min-h-screen bg-bluebook-bg">
++    <div className="flex min-h-screen bg-app-bg">
+       <AdminSidebar username={admin.username ?? 'admin'} />
+       <main className="min-w-0 flex-1">
+         <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+diff --git a/src/app/admin/(authed)/questions/[id]/page.tsx b/src/app/admin/(authed)/questions/[id]/page.tsx
+index 1b6c968..b2fb58c 100644
+--- a/src/app/admin/(authed)/questions/[id]/page.tsx
++++ b/src/app/admin/(authed)/questions/[id]/page.tsx
+@@ -16,7 +16,7 @@ export default async function EditQuestionPage({ params }: PageProps) {
+     <div className="space-y-6">
+       <header>
+         <h1 className="text-2xl font-bold">Edit question</h1>
+-        <p className="mt-1 text-sm text-bluebook-muted">
++        <p className="mt-1 text-sm text-text-muted">
+           Created {q.createdAt.toLocaleDateString()}
+         </p>
+       </header>
+diff --git a/src/app/admin/(authed)/questions/new/page.tsx b/src/app/admin/(authed)/questions/new/page.tsx
+index c3434ed..dc2c170 100644
+--- a/src/app/admin/(authed)/questions/new/page.tsx
++++ b/src/app/admin/(authed)/questions/new/page.tsx
+@@ -7,7 +7,7 @@ export default function NewQuestionPage() {
+     <div className="space-y-6">
+       <header>
+         <h1 className="text-2xl font-bold">New question</h1>
+-        <p className="mt-1 text-sm text-bluebook-muted">
++        <p className="mt-1 text-sm text-text-muted">
+           Text or image for every field. Modes mix freely.
+         </p>
+       </header>
+diff --git a/src/app/admin/(authed)/questions/page.tsx b/src/app/admin/(authed)/questions/page.tsx
+index 1e2acb4..1f2187a 100644
+--- a/src/app/admin/(authed)/questions/page.tsx
++++ b/src/app/admin/(authed)/questions/page.tsx
+@@ -7,7 +7,7 @@ export default function AdminQuestionsPage() {
+     <div className="space-y-6">
+       <header>
+         <h1 className="text-2xl font-bold">Question Bank</h1>
+-        <p className="mt-1 text-sm text-bluebook-muted">
++        <p className="mt-1 text-sm text-text-muted">
+           Create, filter, and organize questions. Reuse them across tests.
+         </p>
+       </header>
+diff --git a/src/app/admin/(authed)/students/page.tsx b/src/app/admin/(authed)/students/page.tsx
+index a226173..fa59027 100644
+--- a/src/app/admin/(authed)/students/page.tsx
++++ b/src/app/admin/(authed)/students/page.tsx
+@@ -7,7 +7,7 @@ export default function AdminStudentsPage() {
+     <div className="space-y-6">
+       <header>
+         <h1 className="text-2xl font-bold">Students</h1>
+-        <p className="mt-1 text-sm text-bluebook-muted">
++        <p className="mt-1 text-sm text-text-muted">
+           Create accounts, reset passwords, and view attempts.
+         </p>
+       </header>
+diff --git a/src/app/admin/(authed)/tests/[id]/page.tsx b/src/app/admin/(authed)/tests/[id]/page.tsx
+index 82d0d43..77cda9c 100644
+--- a/src/app/admin/(authed)/tests/[id]/page.tsx
++++ b/src/app/admin/(authed)/tests/[id]/page.tsx
+@@ -69,7 +69,7 @@ export default async function EditTestPage({ params }: PageProps) {
+     <div className="space-y-6">
+       <header>
+         <h1 className="text-2xl font-bold">Edit test</h1>
+-        <p className="mt-1 text-sm text-bluebook-muted">{test.title}</p>
++        <p className="mt-1 text-sm text-text-muted">{test.title}</p>
+       </header>
+       <TestEditor test={serialized} />
+     </div>
+diff --git a/src/app/admin/(authed)/tests/new/page.tsx b/src/app/admin/(authed)/tests/new/page.tsx
+index 6a9edcd..546eb7b 100644
+--- a/src/app/admin/(authed)/tests/new/page.tsx
++++ b/src/app/admin/(authed)/tests/new/page.tsx
+@@ -7,7 +7,7 @@ export default function NewTestPage() {
+     <div className="space-y-6">
+       <header>
+         <h1 className="text-2xl font-bold">New test</h1>
+-        <p className="mt-1 text-sm text-bluebook-muted">
++        <p className="mt-1 text-sm text-text-muted">
+           Set up the basics, then add modules and questions.
+         </p>
+       </header>
+diff --git a/src/app/admin/(authed)/tests/page.tsx b/src/app/admin/(authed)/tests/page.tsx
+index c4e4876..6d3cdf1 100644
+--- a/src/app/admin/(authed)/tests/page.tsx
++++ b/src/app/admin/(authed)/tests/page.tsx
+@@ -28,7 +28,7 @@ export default async function AdminTestsPage() {
+       <header className="flex flex-wrap items-center justify-between gap-3">
+         <div>
+           <h1 className="text-2xl font-bold">Tests</h1>
+-          <p className="mt-1 text-sm text-bluebook-muted">
++          <p className="mt-1 text-sm text-text-muted">
+             {rows.length} test{rows.length === 1 ? '' : 's'}
+           </p>
+         </div>
+diff --git a/src/app/student/(authed)/dashboard/page.tsx b/src/app/student/(authed)/dashboard/page.tsx
+index 579382c..5ec928e 100644
+--- a/src/app/student/(authed)/dashboard/page.tsx
++++ b/src/app/student/(authed)/dashboard/page.tsx
+@@ -32,14 +32,14 @@ export default async function StudentDashboardPage() {
+     }),
+   ]);
+ 
+-  const testSummaries = tests.map((t) => ({
++  const testSummaries = tests.map((t: typeof tests[number]) => ({
+     id: t.id,
+     title: t.title,
+     description: t.description,
+     moduleCount: t._count.modules,
+   }));
+ 
+-  const attempts = sessions.map((s) => {
++  const attempts = sessions.map((s: typeof sessions[number]) => {
+     const r = s.results as ResultShape | null;
+     const score =
+       r &&
+diff --git a/src/components/admin/AdminLoginForm.tsx b/src/components/admin/AdminLoginForm.tsx
+index 041ddad..499e925 100644
+--- a/src/components/admin/AdminLoginForm.tsx
++++ b/src/components/admin/AdminLoginForm.tsx
+@@ -54,7 +54,7 @@ export function AdminLoginForm() {
+             onChange={(e) => setUsername(e.target.value)}
+             required
+             autoFocus
+-            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
++            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+ 
+@@ -66,7 +66,7 @@ export function AdminLoginForm() {
+             value={password}
+             onChange={(e) => setPassword(e.target.value)}
+             required
+-            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
++            className="h-10 w-full rounded-md border border-border-default bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+ 
+diff --git a/src/components/admin/AdminSidebar.tsx b/src/components/admin/AdminSidebar.tsx
+index 1d74864..125a96c 100644
+--- a/src/components/admin/AdminSidebar.tsx
++++ b/src/components/admin/AdminSidebar.tsx
+@@ -1,94 +1,145 @@
+ 'use client';
+ 
+-import Link from 'next/link';
+ import { usePathname, useRouter } from 'next/navigation';
++import Link from 'next/link';
+ import { useState } from 'react';
+ import clsx from 'clsx';
+ import { adminPost } from '@/lib/admin-client';
+ 
++const navItems = [
++  {
++    label: 'Dashboard',
++    href: '/admin/dashboard',
++    icon: (
++      <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
++        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
++        <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
++      </svg>
++    ),
++  },
++  {
++    label: 'Tests',
++    href: '/admin/tests',
++    icon: (
++      <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
++        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6M5 8h14M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/>
++      </svg>
++    ),
++  },
++  {
++    label: 'Questions',
++    href: '/admin/questions',
++    icon: (
++      <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
++        <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
++        <circle cx="12" cy="12" r="9"/>
++      </svg>
++    ),
++  },
++  {
++    label: 'Students',
++    href: '/admin/students',
++    icon: (
++      <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
++        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20H7a4 4 0 01-4-4v-.5A4.5 4.5 0 017.5 11h9a4.5 4.5 0 014.5 4.5V16a4 4 0 01-4 4zM12 3a4 4 0 100 8 4 4 0 000-8z"/>
++      </svg>
++    ),
++  },
++  {
++    label: 'Import / Export',
++    href: '/admin/import-export',
++    icon: (
++      <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
++        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M16 12l-4 4m0 0l-4-4m4 4V4"/>
++      </svg>
++    ),
++  },
++];
++
+ export interface AdminSidebarProps {
+   username: string;
+ }
+ 
+-interface NavItem {
+-  href: string;
+-  label: string;
+-  icon: string;
+-}
+-
+-const NAV: NavItem[] = [
+-  { href: '/admin/dashboard', label: 'Dashboard', icon: '▤' },
+-  { href: '/admin/tests', label: 'Tests', icon: '☰' },
+-  { href: '/admin/questions', label: 'Question Bank', icon: '?' },
+-  { href: '/admin/students', label: 'Students', icon: '☺' },
+-  { href: '/admin/import-export', label: 'Import / Export', icon: '⇅' },
+-];
+-
+ export function AdminSidebar({ username }: AdminSidebarProps) {
+   const pathname = usePathname();
+   const router = useRouter();
+-  const [loggingOut, setLoggingOut] = useState(false);
+-
+-  const isActive = (href: string) => {
+-    if (href === '/admin/dashboard') return pathname === href;
+-    return pathname === href || pathname.startsWith(href + '/');
+-  };
++  const [busy, setBusy] = useState(false);
+ 
+   const logout = async () => {
+-    setLoggingOut(true);
++    setBusy(true);
+     try {
+-      await adminPost('/api/auth/logout');
++      await adminPost('/api/admin/auth/logout');
+       router.push('/admin');
+       router.refresh();
+     } catch {
+-      setLoggingOut(false);
++      setBusy(false);
+     }
+   };
+ 
+   return (
+-    <aside className="sticky top-0 flex h-screen w-60 flex-none flex-col border-r border-border-subtle bg-surface">
++    <aside className="sticky top-0 flex h-screen w-56 flex-none flex-col border-r border-border-subtle bg-surface">
++      {/* Branding */}
+       <div className="border-b border-border-subtle px-4 py-4">
+-        <Link href="/admin/dashboard" className="block">
+-          <div className="text-base font-bold text-text-primary">SAT Admin</div>
+-          <div className="text-xs text-text-muted">Exam simulator</div>
++        <Link href="/admin/dashboard">
++          <div className="text-sm font-bold text-text-primary">SAT Simulator</div>
++          <div className="mt-0.5 flex items-center gap-1.5">
++            <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-white">
++              ADMIN
++            </span>
++          </div>
+         </Link>
+       </div>
+ 
+-      <nav className="flex-1 space-y-1 p-3">
+-        {NAV.map((item) => {
+-          const active = isActive(item.href);
+-          return (
+-            <Link
+-              key={item.href}
+-              href={item.href}
+-              className={clsx(
+-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+-                active
+-                  ? 'bg-accent-subtle text-accent'
+-                  : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+-              )}
+-            >
+-              <span aria-hidden className="w-4 text-center">
+-                {item.icon}
+-              </span>
+-              {item.label}
+-            </Link>
+-          );
+-        })}
++      {/* Nav */}
++      <nav className="flex-1 overflow-y-auto px-2 py-3">
++        <ul className="space-y-0.5">
++          {navItems.map((item) => {
++            const active = pathname === item.href || pathname.startsWith(item.href + '/');
++            return (
++              <li key={item.href}>
++                <Link
++                  href={item.href}
++                  className={clsx(
++                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
++                    active
++                      ? 'bg-accent-subtle text-accent'
++                      : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
++                  )}
++                >
++                  <span className={clsx('flex-none', active ? 'text-accent' : 'text-text-muted')}>
++                    {item.icon}
++                  </span>
++                  {item.label}
++                </Link>
++              </li>
++            );
++          })}
++        </ul>
+       </nav>
+ 
+-      <div className="border-t border-border-subtle p-3">
+-        <div className="mb-2 px-3 text-xs text-text-muted">
+-          Signed in as <strong className="text-text-primary">{username}</strong>
++      {/* Footer */}
++      <div className="border-t border-border-subtle px-3 py-3">
++        <div className="flex items-center justify-between gap-2">
++          <div className="min-w-0">
++            <div className="flex items-center gap-2">
++              <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-accent-subtle text-xs font-bold text-accent">
++                {username.slice(0, 1).toUpperCase()}
++              </div>
++              <span className="truncate text-xs font-medium text-text-primary">{username}</span>
++            </div>
++          </div>
++          <button
++            type="button"
++            onClick={logout}
++            disabled={busy}
++            title="Sign out"
++            className="flex-none rounded-md p-1.5 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary disabled:opacity-40"
++          >
++            <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
++              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
++            </svg>
++          </button>
+         </div>
+-        <button
+-          type="button"
+-          onClick={logout}
+-          disabled={loggingOut}
+-          className="w-full rounded-md border border-border-default bg-surface px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary disabled:opacity-50"
+-        >
+-          {loggingOut ? 'Signing out…' : 'Sign out'}
+-        </button>
+       </div>
+     </aside>
+   );
+diff --git a/src/components/admin/ImageField.tsx b/src/components/admin/ImageField.tsx
+index 3be1066..42ad09b 100644
+--- a/src/components/admin/ImageField.tsx
++++ b/src/components/admin/ImageField.tsx
+@@ -18,17 +18,11 @@ export interface ImageFieldProps {
+   onChange: (value: ImageFieldValue) => void;
+   placeholder?: string;
+   rows?: number;
+-  /** When true, allows empty text (e.g. passage). Default: false for required fields. */
+   optional?: boolean;
+ }
+ 
+ export function ImageField({
+-  label,
+-  value,
+-  onChange,
+-  placeholder,
+-  rows = 4,
+-  optional = false,
++  label, value, onChange, placeholder, rows = 4, optional = false,
+ }: ImageFieldProps) {
+   const [busy, setBusy] = useState(false);
+   const [error, setError] = useState<string | null>(null);
+@@ -43,16 +37,13 @@ export function ImageField({
+   };
+ 
+   const handleFile = async (file: File) => {
+-    setBusy(true);
+-    setError(null);
++    setBusy(true); setError(null);
+     try {
+       const url = await uploadImage(file);
+       onChange({ ...value, imageUrl: url, isImage: true });
+     } catch (err) {
+       setError(err instanceof Error ? err.message : 'Upload failed');
+-    } finally {
+-      setBusy(false);
+-    }
++    } finally { setBusy(false); }
+   };
+ 
+   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+@@ -63,76 +54,56 @@ export function ImageField({
+ 
+   const onPaste = (e: React.ClipboardEvent) => {
+     const file = extractImageFromClipboard(e.nativeEvent);
+-    if (file) {
+-      e.preventDefault();
+-      void handleFile(file);
+-    }
++    if (file) { e.preventDefault(); void handleFile(file); }
+   };
+ 
+   const onDrop = (e: React.DragEvent) => {
+-    e.preventDefault();
+-    setDragOver(false);
++    e.preventDefault(); setDragOver(false);
+     const file = e.dataTransfer.files?.[0];
+-    if (file && file.type.startsWith('image/')) {
+-      void handleFile(file);
+-    }
++    if (file?.type.startsWith('image/')) void handleFile(file);
+   };
+ 
+   const applyManualUrl = () => {
+     const url = manualUrl.trim();
+     if (!url) return;
+-    try {
+-      new URL(url);
+-    } catch {
+-      setError('Not a valid URL');
+-      return;
+-    }
++    try { new URL(url); } catch { setError('Not a valid URL'); return; }
+     onChange({ ...value, imageUrl: url, isImage: true });
+-    setManualUrl('');
+-    setError(null);
+-  };
+-
+-  const clearImage = () => {
+-    onChange({ ...value, imageUrl: '' });
++    setManualUrl(''); setError(null);
+   };
+ 
+   return (
+     <div className="space-y-2">
+       <div className="flex items-center justify-between">
+-        <span className="text-sm font-medium">
++        <span className="text-sm font-medium text-text-primary">
+           {label}
+-          {!optional && <span className="text-red-500"> *</span>}
++          {!optional && <span className="ml-0.5 text-state-danger"> *</span>}
+         </span>
+-        <div className="inline-flex rounded-md border border-bluebook-border bg-white p-0.5 text-xs">
+-          <button
+-            type="button"
+-            onClick={() => setMode(false)}
+-            className={clsx(
+-              'rounded px-3 py-1 font-medium transition-colors',
+-              !value.isImage
+-                ? 'bg-bluebook-accent text-white'
+-                : 'text-bluebook-muted hover:bg-bluebook-bg'
+-            )}
+-          >
+-            Text
+-          </button>
+-          <button
+-            type="button"
+-            onClick={() => setMode(true)}
+-            className={clsx(
+-              'rounded px-3 py-1 font-medium transition-colors',
+-              value.isImage
+-                ? 'bg-bluebook-accent text-white'
+-                : 'text-bluebook-muted hover:bg-bluebook-bg'
+-            )}
+-          >
+-            Image
+-          </button>
++
++        {/* Text / Image toggle */}
++        <div className="inline-flex rounded-lg border border-border-default bg-surface-alt p-0.5 text-xs">
++          {(['Text', 'Image'] as const).map((mode) => {
++            const active = (mode === 'Image') === value.isImage;
++            return (
++              <button
++                key={mode}
++                type="button"
++                onClick={() => setMode(mode === 'Image')}
++                className={clsx(
++                  'rounded-md px-3 py-1 font-medium transition-colors',
++                  active
++                    ? 'bg-accent text-white shadow-sm'
++                    : 'text-text-muted hover:text-text-primary'
++                )}
++              >
++                {mode}
++              </button>
++            );
++          })}
+         </div>
+       </div>
+ 
+       {error && (
+-        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900">
++        <div className="rounded-md border border-state-danger/25 bg-state-danger-bg px-3 py-2 text-xs text-state-danger">
+           {error}
+         </div>
+       )}
+@@ -144,26 +115,23 @@ export function ImageField({
+           onPaste={onPaste}
+           rows={rows}
+           placeholder={placeholder}
+-          className="w-full rounded-md border border-bluebook-border bg-white px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++          className="w-full rounded-lg border border-border-default bg-surface px-3 py-2 font-mono text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+         />
+       ) : (
+         <div
+           onPaste={onPaste}
+-          onDragOver={(e) => {
+-            e.preventDefault();
+-            setDragOver(true);
+-          }}
++          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+           onDragLeave={() => setDragOver(false)}
+           onDrop={onDrop}
+           className={clsx(
+-            'rounded-md border-2 border-dashed p-4 transition-colors',
++            'rounded-lg border-2 border-dashed p-4 transition-colors',
+             dragOver
+-              ? 'border-bluebook-accent bg-blue-50'
+-              : 'border-bluebook-border bg-bluebook-bg'
++              ? 'border-accent bg-accent-subtle'
++              : 'border-border-default bg-surface-alt hover:border-accent/40'
+           )}
+         >
+           {busy ? (
+-            <div className="flex items-center justify-center gap-2 py-6 text-sm text-bluebook-muted">
++            <div className="flex items-center justify-center gap-2 py-6 text-sm text-text-muted">
+               <Spinner size="sm" /> Uploading…
+             </div>
+           ) : value.imageUrl ? (
+@@ -172,21 +140,16 @@ export function ImageField({
+               <img
+                 src={value.imageUrl}
+                 alt={label}
+-                className="mx-auto max-h-64 rounded border border-bluebook-border bg-white"
++                className="mx-auto max-h-56 rounded-lg border border-border-default bg-surface object-contain"
+               />
+               <div className="flex justify-center gap-2">
+-                <Button
+-                  type="button"
+-                  size="sm"
+-                  variant="secondary"
+-                  onClick={() => fileInputRef.current?.click()}
+-                >
++                <Button type="button" size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                   Replace
+                 </Button>
+                 <button
+                   type="button"
+-                  onClick={clearImage}
+-                  className="rounded border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
++                  onClick={() => onChange({ ...value, imageUrl: '' })}
++                  className="rounded-md border border-state-danger/25 px-3 py-1 text-xs font-medium text-state-danger transition-colors hover:bg-state-danger-bg"
+                 >
+                   Remove
+                 </button>
+@@ -194,38 +157,26 @@ export function ImageField({
+             </div>
+           ) : (
+             <div className="space-y-3 py-4 text-center">
+-              <p className="text-sm text-bluebook-muted">
+-                Drop an image, paste from clipboard, or
+-              </p>
+-              <Button
+-                type="button"
+-                size="sm"
+-                onClick={() => fileInputRef.current?.click()}
+-              >
++              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-border-subtle">
++                <svg aria-hidden className="h-5 w-5 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
++                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
++                </svg>
++              </div>
++              <p className="text-sm text-text-muted">Drop an image, paste from clipboard, or</p>
++              <Button type="button" size="sm" onClick={() => fileInputRef.current?.click()}>
+                 Choose file
+               </Button>
+-              <p className="text-xs text-bluebook-muted">— or paste a URL —</p>
+-              <div className="mx-auto flex max-w-md gap-2">
++              <p className="text-xs text-text-muted">— or paste a URL —</p>
++              <div className="mx-auto flex max-w-xs gap-2">
+                 <input
+                   type="url"
+                   value={manualUrl}
+                   onChange={(e) => setManualUrl(e.target.value)}
+-                  onKeyDown={(e) => {
+-                    if (e.key === 'Enter') {
+-                      e.preventDefault();
+-                      applyManualUrl();
+-                    }
+-                  }}
++                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyManualUrl(); } }}
+                   placeholder="https://…"
+-                  className="h-9 flex-1 rounded-md border border-bluebook-border px-3 text-xs focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++                  className="h-9 flex-1 rounded-md border border-border-default bg-surface px-3 text-xs text-text-primary placeholder:text-text-muted focus:border-accent focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                 />
+-                <Button
+-                  type="button"
+-                  size="sm"
+-                  variant="secondary"
+-                  onClick={applyManualUrl}
+-                  disabled={!manualUrl.trim()}
+-                >
++                <Button type="button" size="sm" variant="secondary" onClick={applyManualUrl} disabled={!manualUrl.trim()}>
+                   Apply
+                 </Button>
+               </div>
+@@ -234,13 +185,7 @@ export function ImageField({
+         </div>
+       )}
+ 
+-      <input
+-        ref={fileInputRef}
+-        type="file"
+-        accept="image/*"
+-        onChange={onFileChange}
+-        className="hidden"
+-      />
++      <input ref={fileInputRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
+     </div>
+   );
+ }
+diff --git a/src/components/admin/ImportExportPanel.tsx b/src/components/admin/ImportExportPanel.tsx
+index f1551cb..8f55282 100644
+--- a/src/components/admin/ImportExportPanel.tsx
++++ b/src/components/admin/ImportExportPanel.tsx
+@@ -97,10 +97,10 @@ export function ImportExportPanel({ tests }: ImportExportPanelProps) {
+   return (
+     <div className="space-y-6">
+       {/* Export */}
+-      <section className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         <div>
+           <h2 className="text-base font-semibold">Export a test</h2>
+-          <p className="mt-1 text-xs text-bluebook-muted">
++          <p className="mt-1 text-xs text-text-muted">
+             Downloads a JSON file with the test structure and all question content.
+           </p>
+         </div>
+@@ -108,13 +108,13 @@ export function ImportExportPanel({ tests }: ImportExportPanelProps) {
+         {exportError && <Alert tone="error">{exportError}</Alert>}
+ 
+         {tests.length === 0 ? (
+-          <p className="text-sm text-bluebook-muted">No tests to export yet.</p>
++          <p className="text-sm text-text-muted">No tests to export yet.</p>
+         ) : (
+           <div className="flex flex-wrap items-center gap-2">
+             <select
+               value={exportId}
+               onChange={(e) => setExportId(e.target.value)}
+-              className="h-10 flex-1 rounded-md border border-bluebook-border px-3 text-sm"
++              className="h-10 flex-1 rounded-md border border-border-default px-3 text-sm"
+             >
+               {tests.map((t) => (
+                 <option key={t.id} value={t.id}>
+@@ -131,10 +131,10 @@ export function ImportExportPanel({ tests }: ImportExportPanelProps) {
+       </section>
+ 
+       {/* Import */}
+-      <section className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         <div>
+           <h2 className="text-base font-semibold">Import a test</h2>
+-          <p className="mt-1 text-xs text-bluebook-muted">
++          <p className="mt-1 text-xs text-text-muted">
+             Uploads a JSON file from a previous export. A new test will be created;
+             existing tests are not affected.
+           </p>
+@@ -146,14 +146,14 @@ export function ImportExportPanel({ tests }: ImportExportPanelProps) {
+         <label className="block space-y-1 text-xs">
+           <span className="font-medium">
+             Password for the imported test{' '}
+-            <span className="text-bluebook-muted">(students will use this)</span>
++            <span className="text-text-muted">(students will use this)</span>
+           </span>
+           <input
+             type="text"
+             value={importPassword}
+             onChange={(e) => setImportPassword(e.target.value)}
+             placeholder="e.g. demo1234"
+-            className="h-10 w-full max-w-xs rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++            className="h-10 w-full max-w-xs rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+ 
+diff --git a/src/components/admin/ModuleEditor.tsx b/src/components/admin/ModuleEditor.tsx
+index 3a2f4ec..927d465 100644
+--- a/src/components/admin/ModuleEditor.tsx
++++ b/src/components/admin/ModuleEditor.tsx
+@@ -87,13 +87,13 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps)
+   const subjectLabel = subject === 'math' ? 'Math' : 'Reading & Writing';
+ 
+   return (
+-    <div className="rounded-lg border border-bluebook-border bg-white shadow-card">
+-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-bluebook-border px-4 py-3">
++    <div className="rounded-lg border border-border-default bg-surface shadow-card">
++      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border-default px-4 py-3">
+         <div className="flex items-center gap-3">
+           <button
+             type="button"
+             onClick={() => setCollapsed((c) => !c)}
+-            className="rounded p-1 text-bluebook-muted hover:bg-bluebook-bg"
++            className="rounded p-1 text-text-muted hover:bg-surface-alt"
+             aria-label={collapsed ? 'Expand' : 'Collapse'}
+           >
+             {collapsed ? '▸' : '▾'}
+@@ -102,7 +102,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps)
+             <div className="text-sm font-semibold">
+               {subjectLabel} — Module {module.moduleNumber}
+             </div>
+-            <div className="mt-0.5 flex items-center gap-2 text-xs text-bluebook-muted">
++            <div className="mt-0.5 flex items-center gap-2 text-xs text-text-muted">
+               <Badge tone="neutral">{difficulty}</Badge>
+               <span>
+                 {module.questions.length} question
+@@ -137,7 +137,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps)
+               <select
+                 value={subject}
+                 onChange={(e) => setSubject(e.target.value)}
+-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+               >
+                 <option value="math">Math</option>
+                 <option value="reading_writing">Reading &amp; Writing</option>
+@@ -148,7 +148,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps)
+               <select
+                 value={difficulty}
+                 onChange={(e) => setDifficulty(e.target.value)}
+-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+               >
+                 <option value="standard">standard</option>
+                 <option value="easy">easy</option>
+@@ -163,7 +163,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps)
+                 max={120}
+                 value={minutes}
+                 onChange={(e) => setMinutes(Number(e.target.value))}
+-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+               />
+             </label>
+             <label className="space-y-1 text-xs">
+@@ -174,7 +174,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps)
+                 value={adaptiveThreshold}
+                 onChange={(e) => setAdaptiveThreshold(e.target.value)}
+                 placeholder="—"
+-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+               />
+             </label>
+           </div>
+@@ -185,7 +185,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps)
+               <select
+                 value={routesTo}
+                 onChange={(e) => setRoutesTo(e.target.value)}
+-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+               >
+                 <option value="">—</option>
+                 <option value="easy">easy</option>
+@@ -200,11 +200,11 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps)
+           </div>
+ 
+           <div>
+-            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-bluebook-muted">
++            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-text-muted">
+               Questions
+             </div>
+             {module.questions.length === 0 ? (
+-              <div className="rounded-md border border-dashed border-bluebook-border p-6 text-center text-xs text-bluebook-muted">
++              <div className="rounded-md border border-dashed border-border-default p-6 text-center text-xs text-text-muted">
+                 No questions yet. Click <strong>+ Add questions</strong> above.
+               </div>
+             ) : (
+diff --git a/src/components/admin/QuestionBank.tsx b/src/components/admin/QuestionBank.tsx
+index 6334802..be6f327 100644
+--- a/src/components/admin/QuestionBank.tsx
++++ b/src/components/admin/QuestionBank.tsx
+@@ -133,7 +133,7 @@ export function QuestionBank() {
+         <select
+           value={filterSubject}
+           onChange={(e) => setFilterSubject(e.target.value)}
+-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
++          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
+         >
+           <option value="">All subjects</option>
+           <option value="math">Math</option>
+@@ -142,7 +142,7 @@ export function QuestionBank() {
+         <select
+           value={filterDifficulty}
+           onChange={(e) => setFilterDifficulty(e.target.value)}
+-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
++          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
+         >
+           <option value="">All difficulties</option>
+           <option value="easy">easy</option>
+@@ -152,7 +152,7 @@ export function QuestionBank() {
+         <select
+           value={filterType}
+           onChange={(e) => setFilterType(e.target.value)}
+-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
++          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
+         >
+           <option value="">All types</option>
+           <option value="multiple_choice">multiple choice</option>
+@@ -161,7 +161,7 @@ export function QuestionBank() {
+         <select
+           value={filterPublished}
+           onChange={(e) => setFilterPublished(e.target.value)}
+-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
++          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
+         >
+           <option value="">Any status</option>
+           <option value="true">Published</option>
+@@ -172,13 +172,13 @@ export function QuestionBank() {
+           value={search}
+           onChange={(e) => setSearch(e.target.value)}
+           placeholder="Search…"
+-          className="h-9 rounded-md border border-bluebook-border bg-white px-2 text-xs"
++          className="h-9 rounded-md border border-border-default bg-surface px-2 text-xs"
+         />
+       </div>
+ 
+       {/* Bulk bar */}
+       {selected.size > 0 && (
+-        <div className="flex items-center justify-between rounded-md border border-bluebook-accent bg-blue-50 px-4 py-2 text-sm">
++        <div className="flex items-center justify-between rounded-md border border-accent bg-accent-subtle px-4 py-2 text-sm">
+           <span>
+             {selected.size} selected
+           </span>
+@@ -187,7 +187,7 @@ export function QuestionBank() {
+               type="button"
+               onClick={() => bulkPublish(true)}
+               disabled={busyId === 'bulk'}
+-              className="rounded border border-green-300 bg-white px-3 py-1 text-xs text-green-700 hover:bg-green-50 disabled:opacity-50"
++              className="rounded border border-green-300 bg-surface px-3 py-1 text-xs text-green-700 hover:bg-green-50 disabled:opacity-50"
+             >
+               Publish
+             </button>
+@@ -195,14 +195,14 @@ export function QuestionBank() {
+               type="button"
+               onClick={() => bulkPublish(false)}
+               disabled={busyId === 'bulk'}
+-              className="rounded border border-bluebook-border bg-white px-3 py-1 text-xs hover:bg-bluebook-bg disabled:opacity-50"
++              className="rounded border border-border-default bg-surface px-3 py-1 text-xs hover:bg-surface-alt disabled:opacity-50"
+             >
+               Unpublish
+             </button>
+             <button
+               type="button"
+               onClick={() => setSelected(new Set())}
+-              className="rounded px-3 py-1 text-xs text-bluebook-muted hover:underline"
++              className="rounded px-3 py-1 text-xs text-text-muted hover:underline"
+             >
+               Clear
+             </button>
+@@ -213,7 +213,7 @@ export function QuestionBank() {
+       {error && <Alert tone="error">{error}</Alert>}
+ 
+       <div className="flex items-center justify-between">
+-        <div className="text-sm text-bluebook-muted">
++        <div className="text-sm text-text-muted">
+           {loading ? 'Loading…' : `${questions.length} question${questions.length === 1 ? '' : 's'}`}
+         </div>
+         <Link href="/admin/questions/new">
+@@ -222,24 +222,24 @@ export function QuestionBank() {
+       </div>
+ 
+       {loading ? (
+-        <div className="rounded-lg border border-bluebook-border bg-white p-8 text-center text-sm text-bluebook-muted">
++        <div className="rounded-lg border border-border-default bg-surface p-8 text-center text-sm text-text-muted">
+           Loading…
+         </div>
+       ) : questions.length === 0 ? (
+-        <div className="rounded-lg border border-bluebook-border bg-white p-8 text-center text-sm text-bluebook-muted">
++        <div className="rounded-lg border border-border-default bg-surface p-8 text-center text-sm text-text-muted">
+           No questions match. Try clearing filters, or{' '}
+           <Link
+             href="/admin/questions/new"
+-            className="text-bluebook-accent hover:underline"
++            className="text-accent hover:underline"
+           >
+             create one
+           </Link>
+           .
+         </div>
+       ) : (
+-        <div className="overflow-hidden rounded-lg border border-bluebook-border bg-white">
++        <div className="overflow-hidden rounded-lg border border-border-default bg-surface">
+           <table className="w-full text-sm">
+-            <thead className="bg-bluebook-bg text-left text-xs uppercase tracking-wide text-bluebook-muted">
++            <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-text-muted">
+               <tr>
+                 <th className="w-8 px-3 py-2">
+                   <input
+@@ -248,7 +248,7 @@ export function QuestionBank() {
+                       questions.length > 0 && selected.size === questions.length
+                     }
+                     onChange={toggleAll}
+-                    className="h-4 w-4 rounded border-bluebook-border text-bluebook-accent focus:ring-bluebook-accent"
++                    className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent/20"
+                   />
+                 </th>
+                 <th className="px-3 py-2 font-medium">Stem</th>
+@@ -258,7 +258,7 @@ export function QuestionBank() {
+                 <th className="w-40 px-3 py-2" />
+               </tr>
+             </thead>
+-            <tbody className="divide-y divide-bluebook-border">
++            <tbody className="divide-y divide-border-subtle">
+               {questions.map((q) => {
+                 const isSel = selected.has(q.id);
+                 const stem = q.stemIsImage
+@@ -274,16 +274,16 @@ export function QuestionBank() {
+                         type="checkbox"
+                         checked={isSel}
+                         onChange={() => toggleSelected(q.id)}
+-                        className="h-4 w-4 rounded border-bluebook-border text-bluebook-accent focus:ring-bluebook-accent"
++                        className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent/20"
+                       />
+                     </td>
+                     <td className="px-3 py-3">
+                       <Link
+                         href={`/admin/questions/${q.id}`}
+-                        className="hover:text-bluebook-accent hover:underline"
++                        className="hover:text-accent hover:underline"
+                       >
+                         <div className="truncate">{stem}</div>
+-                        <div className="mt-0.5 flex gap-2 text-xs text-bluebook-muted">
++                        <div className="mt-0.5 flex gap-2 text-xs text-text-muted">
+                           <span>{q.subject === 'math' ? 'Math' : 'R&W'}</span>
+                           {q.domain && (
+                             <>
+@@ -309,7 +309,7 @@ export function QuestionBank() {
+                           type="button"
+                           onClick={() => duplicate(q)}
+                           disabled={busyId === q.id}
+-                          className="text-xs text-bluebook-accent hover:underline disabled:opacity-50"
++                          className="text-xs text-accent hover:underline disabled:opacity-50"
+                         >
+                           Duplicate
+                         </button>
+diff --git a/src/components/admin/QuestionEditor.tsx b/src/components/admin/QuestionEditor.tsx
+index 4400e6d..212df93 100644
+--- a/src/components/admin/QuestionEditor.tsx
++++ b/src/components/admin/QuestionEditor.tsx
+@@ -254,7 +254,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+       {error && <Alert tone="error">{error}</Alert>}
+ 
+       {/* Meta */}
+-      <section className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         <h2 className="text-base font-semibold">Question details</h2>
+ 
+         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+@@ -263,7 +263,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+             <select
+               value={subject}
+               onChange={(e) => setSubject(e.target.value)}
+-              className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++              className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+             >
+               <option value="math">Math</option>
+               <option value="reading_writing">Reading &amp; Writing</option>
+@@ -276,7 +276,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+               onChange={(e) =>
+                 setType(e.target.value as 'multiple_choice' | 'grid_in')
+               }
+-              className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++              className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+             >
+               <option value="multiple_choice">Multiple choice</option>
+               <option value="grid_in">Grid-in</option>
+@@ -287,7 +287,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+             <select
+               value={difficulty}
+               onChange={(e) => setDifficulty(e.target.value)}
+-              className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++              className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+             >
+               <option value="easy">easy</option>
+               <option value="medium">medium</option>
+@@ -301,7 +301,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+               value={domain}
+               onChange={(e) => setDomain(e.target.value)}
+               placeholder="Algebra"
+-              className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++              className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+             />
+           </label>
+         </div>
+@@ -313,7 +313,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+             value={tagsText}
+             onChange={(e) => setTagsText(e.target.value)}
+             placeholder="linear-equations, slope"
+-            className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
++            className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+ 
+@@ -322,14 +322,14 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+             type="checkbox"
+             checked={isPublished}
+             onChange={(e) => setIsPublished(e.target.checked)}
+-            className="h-4 w-4 rounded border-bluebook-border text-bluebook-accent focus:ring-bluebook-accent"
++            className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent/20"
+           />
+           Published (visible in bank)
+         </label>
+       </section>
+ 
+       {/* Passage */}
+-      <section className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <section className="rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         <ImageField
+           label="Passage (optional)"
+           value={passage}
+@@ -341,7 +341,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+       </section>
+ 
+       {/* Stem */}
+-      <section className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <section className="rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         <ImageField
+           label="Question stem"
+           value={stem}
+@@ -352,12 +352,12 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+       </section>
+ 
+       {/* Choices or grid-in */}
+-      <section className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         {type === 'multiple_choice' ? (
+           <>
+             <div className="flex items-center justify-between">
+               <h2 className="text-base font-semibold">Answer choices</h2>
+-              <span className="text-xs text-bluebook-muted">
++              <span className="text-xs text-text-muted">
+                 Click the circle to mark the correct answer
+               </span>
+             </div>
+@@ -372,7 +372,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+                       'rounded-md border p-3',
+                       isCorrect
+                         ? 'border-green-300 bg-green-50'
+-                        : 'border-bluebook-border'
++                        : 'border-border-default'
+                     )}
+                   >
+                     <div className="mb-2 flex items-center justify-between">
+@@ -384,25 +384,25 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+                             'flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold',
+                             isCorrect
+                               ? 'border-green-600 bg-green-600 text-white'
+-                              : 'border-bluebook-border text-bluebook-muted hover:border-bluebook-accent'
++                              : 'border-border-default text-text-muted hover:border-accent'
+                           )}
+                           aria-label={`Mark ${c.id} correct`}
+                         >
+                           {c.id}
+                         </button>
+-                        <span className="text-xs text-bluebook-muted">
++                        <span className="text-xs text-text-muted">
+                           {isCorrect ? 'Correct answer' : `Choice ${c.id}`}
+                         </span>
+                       </div>
+-                      <div className="inline-flex rounded-md border border-bluebook-border bg-white p-0.5 text-xs">
++                      <div className="inline-flex rounded-md border border-border-default bg-surface p-0.5 text-xs">
+                         <button
+                           type="button"
+                           onClick={() => setChoiceMode(c.id, 'text')}
+                           className={clsx(
+                             'rounded px-2 py-0.5',
+                             c.mode === 'text'
+-                              ? 'bg-bluebook-accent text-white'
+-                              : 'text-bluebook-muted'
++                              ? 'bg-accent text-white'
++                              : 'text-text-muted'
+                           )}
+                         >
+                           Text
+@@ -413,8 +413,8 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+                           className={clsx(
+                             'rounded px-2 py-0.5',
+                             c.mode === 'image'
+-                              ? 'bg-bluebook-accent text-white'
+-                              : 'text-bluebook-muted'
++                              ? 'bg-accent text-white'
++                              : 'text-text-muted'
+                           )}
+                         >
+                           Image
+@@ -427,7 +427,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+                         onChange={(e) => updateChoice(c.id, { text: e.target.value })}
+                         rows={2}
+                         placeholder={`Choice ${c.id}`}
+-                        className="w-full rounded-md border border-bluebook-border px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++                        className="w-full rounded-md border border-border-default px-3 py-2 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                       />
+                     ) : (
+                       <MiniImageField
+@@ -450,9 +450,9 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+                 value={gridInAnswer}
+                 onChange={(e) => setGridInAnswer(e.target.value)}
+                 placeholder="19"
+-                className="h-10 w-48 rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++                className="h-10 w-48 rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+               />
+-              <span className="text-bluebook-muted">
++              <span className="text-text-muted">
+                 Integers, decimals, negatives, or fractions (e.g. 3, 3.5, -2, 3/4).
+                 Grid-in questions have no choices.
+               </span>
+@@ -462,7 +462,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+       </section>
+ 
+       {/* Explanation */}
+-      <section className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <section className="rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         <ImageField
+           label="Explanation (optional)"
+           value={explanation}
+@@ -478,7 +478,7 @@ export function QuestionEditor({ initial }: QuestionEditorProps) {
+         <button
+           type="button"
+           onClick={() => setPreview((p) => !p)}
+-          className="rounded-md border border-bluebook-border bg-white px-3 py-1.5 text-sm hover:bg-bluebook-bg"
++          className="rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm hover:bg-surface-alt"
+         >
+           {preview ? 'Hide preview' : 'Show preview'}
+         </button>
+@@ -537,13 +537,13 @@ function MiniImageField({
+           <img
+             src={value}
+             alt="Choice"
+-            className="max-h-32 rounded border border-bluebook-border"
++            className="max-h-32 rounded border border-border-default"
+           />
+           <div className="flex gap-2">
+             <button
+               type="button"
+               onClick={() => fileRef.current?.click()}
+-              className="rounded border border-bluebook-border px-2 py-1 text-xs hover:bg-bluebook-bg"
++              className="rounded border border-border-default px-2 py-1 text-xs hover:bg-surface-alt"
+             >
+               Replace
+             </button>
+@@ -561,7 +561,7 @@ function MiniImageField({
+           type="button"
+           onClick={() => fileRef.current?.click()}
+           disabled={busy}
+-          className="rounded border-2 border-dashed border-bluebook-border px-4 py-3 text-xs text-bluebook-muted hover:border-bluebook-accent hover:bg-blue-50"
++          className="rounded border-2 border-dashed border-border-default px-4 py-3 text-xs text-text-muted hover:border-accent hover:bg-blue-50"
+         >
+           {busy ? 'Uploading…' : 'Upload image'}
+         </button>
+@@ -601,15 +601,15 @@ function QuestionPreview({
+   explanation: ImageFieldValue;
+ }) {
+   return (
+-    <section className="rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++    <section className="rounded-lg border border-border-default bg-surface p-6 shadow-card">
+       <h2 className="mb-3 text-base font-semibold">Preview (as students see it)</h2>
+-      <div className="rounded-md border border-bluebook-border bg-bluebook-bg p-4">
++      <div className="rounded-md border border-border-default bg-surface-alt p-4">
+         {passage.isImage && passage.imageUrl && (
+           // eslint-disable-next-line @next/next/no-img-element
+           <img
+             src={passage.imageUrl}
+             alt="Passage"
+-            className="mb-4 w-full rounded border border-bluebook-border bg-white"
++            className="mb-4 w-full rounded border border-border-default bg-surface"
+           />
+         )}
+         {!passage.isImage && passage.text && (
+@@ -621,7 +621,7 @@ function QuestionPreview({
+           <img
+             src={stem.imageUrl}
+             alt="Stem"
+-            className="mb-4 max-h-64 rounded border border-bluebook-border bg-white"
++            className="mb-4 max-h-64 rounded border border-border-default bg-surface"
+           />
+         ) : (
+           <KatexRenderer text={stem.text} className="mb-4 text-base" />
+@@ -633,13 +633,13 @@ function QuestionPreview({
+               <li
+                 key={c.id}
+                 className={clsx(
+-                  'flex items-start gap-3 rounded-md border bg-white p-3',
++                  'flex items-start gap-3 rounded-md border bg-surface p-3',
+                   correctAnswer === c.id
+                     ? 'border-green-300'
+-                    : 'border-bluebook-border'
++                    : 'border-border-default'
+                 )}
+               >
+-                <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border border-bluebook-border text-xs font-bold">
++                <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border border-border-default text-xs font-bold">
+                   {c.id}
+                 </span>
+                 {c.mode === 'text' ? (
+@@ -652,7 +652,7 @@ function QuestionPreview({
+                     className="max-h-24 rounded"
+                   />
+                 ) : (
+-                  <span className="text-xs text-bluebook-muted">
++                  <span className="text-xs text-text-muted">
+                     (no image yet)
+                   </span>
+                 )}
+@@ -660,19 +660,19 @@ function QuestionPreview({
+             ))}
+           </ul>
+         ) : (
+-          <div className="rounded-md border border-bluebook-border bg-white p-3 text-sm">
++          <div className="rounded-md border border-border-default bg-surface p-3 text-sm">
+             <div className="font-mono">
+               {gridInAnswer || '(no answer set)'}
+             </div>
+-            <div className="mt-1 text-xs text-bluebook-muted">
++            <div className="mt-1 text-xs text-text-muted">
+               Grid-in question — students type a number.
+             </div>
+           </div>
+         )}
+ 
+         {(explanation.text || explanation.imageUrl) && (
+-          <div className="mt-4 rounded-md border border-bluebook-border bg-white p-3">
+-            <div className="mb-1 text-xs font-medium uppercase text-bluebook-muted">
++          <div className="mt-4 rounded-md border border-border-default bg-surface p-3">
++            <div className="mb-1 text-xs font-medium uppercase text-text-muted">
+               Explanation
+             </div>
+             {explanation.isImage && explanation.imageUrl ? (
+@@ -680,7 +680,7 @@ function QuestionPreview({
+               <img
+                 src={explanation.imageUrl}
+                 alt="Explanation"
+-                className="max-w-full rounded border border-bluebook-border"
++                className="max-w-full rounded border border-border-default"
+               />
+             ) : (
+               <KatexRenderer text={explanation.text} className="text-sm" />
+diff --git a/src/components/admin/QuestionPicker.tsx b/src/components/admin/QuestionPicker.tsx
+index 27fc6f4..b9db807 100644
+--- a/src/components/admin/QuestionPicker.tsx
++++ b/src/components/admin/QuestionPicker.tsx
+@@ -105,7 +105,7 @@ export function QuestionPicker({
+           <select
+             value={filterSubject}
+             onChange={(e) => setFilterSubject(e.target.value)}
+-            className="h-9 rounded-md border border-bluebook-border px-2 text-xs"
++            className="h-9 rounded-md border border-border-default px-2 text-xs"
+           >
+             <option value="">All subjects</option>
+             <option value="math">Math</option>
+@@ -114,7 +114,7 @@ export function QuestionPicker({
+           <select
+             value={filterDifficulty}
+             onChange={(e) => setFilterDifficulty(e.target.value)}
+-            className="h-9 rounded-md border border-bluebook-border px-2 text-xs"
++            className="h-9 rounded-md border border-border-default px-2 text-xs"
+           >
+             <option value="">All difficulties</option>
+             <option value="easy">easy</option>
+@@ -124,7 +124,7 @@ export function QuestionPicker({
+           <select
+             value={filterType}
+             onChange={(e) => setFilterType(e.target.value)}
+-            className="h-9 rounded-md border border-bluebook-border px-2 text-xs"
++            className="h-9 rounded-md border border-border-default px-2 text-xs"
+           >
+             <option value="">All types</option>
+             <option value="multiple_choice">multiple choice</option>
+@@ -135,18 +135,18 @@ export function QuestionPicker({
+             value={search}
+             onChange={(e) => setSearch(e.target.value)}
+             placeholder="Search stem…"
+-            className="h-9 rounded-md border border-bluebook-border px-2 text-xs"
++            className="h-9 rounded-md border border-border-default px-2 text-xs"
+           />
+         </div>
+ 
+         {error && <Alert tone="error">{error}</Alert>}
+ 
+         {loading ? (
+-          <div className="p-6 text-center text-sm text-bluebook-muted">
++          <div className="p-6 text-center text-sm text-text-muted">
+             Loading…
+           </div>
+         ) : questions.length === 0 ? (
+-          <div className="p-6 text-center text-sm text-bluebook-muted">
++          <div className="p-6 text-center text-sm text-text-muted">
+             No questions match. Create one in the Question Bank first.
+           </div>
+         ) : (
+@@ -159,11 +159,11 @@ export function QuestionPicker({
+               return (
+                 <li
+                   key={q.id}
+-                  className="flex items-center justify-between gap-3 rounded-md border border-bluebook-border px-3 py-2"
++                  className="flex items-center justify-between gap-3 rounded-md border border-border-default px-3 py-2"
+                 >
+                   <div className="min-w-0 flex-1">
+                     <div className="truncate text-sm">{stem}</div>
+-                    <div className="mt-0.5 flex gap-2 text-xs text-bluebook-muted">
++                    <div className="mt-0.5 flex gap-2 text-xs text-text-muted">
+                       <span>
+                         {q.subject === 'math' ? 'Math' : 'R&W'}
+                       </span>
+diff --git a/src/components/admin/SortableQuestionList.tsx b/src/components/admin/SortableQuestionList.tsx
+index 71fb8ff..13c2c1e 100644
+--- a/src/components/admin/SortableQuestionList.tsx
++++ b/src/components/admin/SortableQuestionList.tsx
+@@ -146,21 +146,21 @@ function SortableRow({
+     <li
+       ref={setNodeRef}
+       style={style}
+-      className="flex items-center gap-3 rounded-md border border-bluebook-border bg-white px-3 py-2"
++      className="flex items-center gap-3 rounded-md border border-border-default bg-surface px-3 py-2"
+     >
+       <button
+         type="button"
+         {...attributes}
+         {...listeners}
+-        className="cursor-grab touch-none rounded p-1 text-bluebook-muted hover:bg-bluebook-bg active:cursor-grabbing"
++        className="cursor-grab touch-none rounded p-1 text-text-muted hover:bg-surface-alt active:cursor-grabbing"
+         aria-label="Drag to reorder"
+       >
+         ⋮⋮
+       </button>
+-      <span className="font-mono text-xs text-bluebook-muted">{number}.</span>
++      <span className="font-mono text-xs text-text-muted">{number}.</span>
+       <div className="min-w-0 flex-1">
+         <div className="truncate text-sm">{stemPreview}</div>
+-        <div className="mt-0.5 flex gap-2 text-xs text-bluebook-muted">
++        <div className="mt-0.5 flex gap-2 text-xs text-text-muted">
+           <span>{q.type === 'grid_in' ? 'grid-in' : 'multiple choice'}</span>
+           <span>·</span>
+           <span>{q.difficulty}</span>
+diff --git a/src/components/admin/StudentManager.tsx b/src/components/admin/StudentManager.tsx
+index cf1f209..3de0a27 100644
+--- a/src/components/admin/StudentManager.tsx
++++ b/src/components/admin/StudentManager.tsx
+@@ -136,17 +136,17 @@ export function StudentManager() {
+       {error && <Alert tone="error">{error}</Alert>}
+ 
+       {loading ? (
+-        <div className="rounded-lg border border-bluebook-border bg-white p-6 text-center text-sm text-bluebook-muted">
++        <div className="rounded-lg border border-border-default bg-surface p-6 text-center text-sm text-text-muted">
+           Loading…
+         </div>
+       ) : students.length === 0 ? (
+-        <div className="rounded-lg border border-bluebook-border bg-white p-6 text-center text-sm text-bluebook-muted">
++        <div className="rounded-lg border border-border-default bg-surface p-6 text-center text-sm text-text-muted">
+           No students yet. Create one to get started.
+         </div>
+       ) : (
+-        <div className="overflow-hidden rounded-lg border border-bluebook-border bg-white">
++        <div className="overflow-hidden rounded-lg border border-border-default bg-surface">
+           <table className="w-full text-sm">
+-            <thead className="bg-bluebook-bg text-left text-xs uppercase tracking-wide text-bluebook-muted">
++            <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-text-muted">
+               <tr>
+                 <th className="px-4 py-2 font-medium">Name</th>
+                 <th className="px-4 py-2 font-medium">Username</th>
+@@ -155,12 +155,12 @@ export function StudentManager() {
+                 <th className="px-4 py-2" />
+               </tr>
+             </thead>
+-            <tbody className="divide-y divide-bluebook-border">
++            <tbody className="divide-y divide-border-subtle">
+               {students.map((s) => (
+                 <tr key={s.id}>
+                   <td className="px-4 py-3 font-medium">{s.name}</td>
+                   <td className="px-4 py-3 font-mono text-xs">{s.username}</td>
+-                  <td className="px-4 py-3 text-bluebook-muted">{s.attemptCount}</td>
++                  <td className="px-4 py-3 text-text-muted">{s.attemptCount}</td>
+                   <td className="px-4 py-3">
+                     <Badge tone={s.isActive ? 'success' : 'neutral'}>
+                       {s.isActive ? 'active' : 'disabled'}
+@@ -174,14 +174,14 @@ export function StudentManager() {
+                           setResetFor(s);
+                           setResetPassword(randomPassword());
+                         }}
+-                        className="text-xs text-bluebook-accent hover:underline"
++                        className="text-xs text-accent hover:underline"
+                       >
+                         Reset password
+                       </button>
+                       <button
+                         type="button"
+                         onClick={() => toggleActive(s)}
+-                        className="text-xs text-bluebook-muted hover:underline"
++                        className="text-xs text-text-muted hover:underline"
+                       >
+                         {s.isActive ? 'Disable' : 'Enable'}
+                       </button>
+@@ -233,7 +233,7 @@ export function StudentManager() {
+               value={createName}
+               onChange={(e) => setCreateName(e.target.value)}
+               placeholder="Jane Doe"
+-              className="h-10 w-full rounded-md border border-bluebook-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++              className="h-10 w-full rounded-md border border-border-default px-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+             />
+           </label>
+           <label className="block space-y-1">
+@@ -243,9 +243,9 @@ export function StudentManager() {
+               value={createUsername}
+               onChange={(e) => setCreateUsername(e.target.value)}
+               placeholder="jane.doe"
+-              className="h-10 w-full rounded-md border border-bluebook-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++              className="h-10 w-full rounded-md border border-border-default px-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+             />
+-            <span className="text-xs text-bluebook-muted">
++            <span className="text-xs text-text-muted">
+               Letters, numbers, dot, dash, underscore. 3–60 chars.
+             </span>
+           </label>
+@@ -256,7 +256,7 @@ export function StudentManager() {
+                 type="text"
+                 value={createPassword}
+                 onChange={(e) => setCreatePassword(e.target.value)}
+-                className="h-10 flex-1 rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++                className="h-10 flex-1 rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+               />
+               <Button
+                 type="button"
+@@ -266,7 +266,7 @@ export function StudentManager() {
+                 Regenerate
+               </Button>
+             </div>
+-            <span className="text-xs text-bluebook-muted">
++            <span className="text-xs text-text-muted">
+               Share this with the student. They can&apos;t change it themselves.
+             </span>
+           </label>
+@@ -301,7 +301,7 @@ export function StudentManager() {
+                 type="text"
+                 value={resetPassword}
+                 onChange={(e) => setResetPassword(e.target.value)}
+-                className="h-10 flex-1 rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++                className="h-10 flex-1 rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+               />
+               <Button
+                 type="button"
+diff --git a/src/components/admin/TestEditor.tsx b/src/components/admin/TestEditor.tsx
+index 4f3163b..dd429e5 100644
+--- a/src/components/admin/TestEditor.tsx
++++ b/src/components/admin/TestEditor.tsx
+@@ -129,7 +129,7 @@ export function TestEditor({ test }: { test: EditorTest }) {
+       {error && <Alert tone="error">{error}</Alert>}
+       {message && <Alert tone="success">{message}</Alert>}
+ 
+-      <section className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         <h2 className="text-base font-semibold">Test settings</h2>
+ 
+         <label className="block space-y-1">
+@@ -138,7 +138,7 @@ export function TestEditor({ test }: { test: EditorTest }) {
+             type="text"
+             value={title}
+             onChange={(e) => setTitle(e.target.value)}
+-            className="h-10 w-full rounded-md border border-bluebook-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++            className="h-10 w-full rounded-md border border-border-default px-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+ 
+@@ -148,19 +148,19 @@ export function TestEditor({ test }: { test: EditorTest }) {
+             value={description}
+             onChange={(e) => setDescription(e.target.value)}
+             rows={2}
+-            className="w-full rounded-md border border-bluebook-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++            className="w-full rounded-md border border-border-default px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+ 
+         <label className="block space-y-1">
+           <span className="text-sm font-medium">
+-            New password <span className="text-bluebook-muted">(leave blank to keep current)</span>
++            New password <span className="text-text-muted">(leave blank to keep current)</span>
+           </span>
+           <input
+             type="text"
+             value={newPassword}
+             onChange={(e) => setNewPassword(e.target.value)}
+-            className="h-10 w-full rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++            className="h-10 w-full rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+ 
+@@ -208,7 +208,7 @@ export function TestEditor({ test }: { test: EditorTest }) {
+         </div>
+ 
+         {test.modules.length === 0 ? (
+-          <div className="rounded-lg border border-bluebook-border bg-white p-6 text-center text-sm text-bluebook-muted">
++          <div className="rounded-lg border border-border-default bg-surface p-6 text-center text-sm text-text-muted">
+             No modules yet. Add one to start building the exam.
+           </div>
+         ) : (
+@@ -225,11 +225,11 @@ export function TestEditor({ test }: { test: EditorTest }) {
+         )}
+       </section>
+ 
+-      <section className="rounded-lg border border-red-200 bg-white p-4">
++      <section className="rounded-lg border border-red-200 bg-surface p-4">
+         <div className="flex items-center justify-between">
+           <div>
+             <div className="text-sm font-medium">Delete test</div>
+-            <div className="text-xs text-bluebook-muted">
++            <div className="text-xs text-text-muted">
+               Permanently removes the test, its modules, and all attempts.
+             </div>
+           </div>
+@@ -242,7 +242,7 @@ export function TestEditor({ test }: { test: EditorTest }) {
+       <div className="text-center">
+         <Link
+           href="/admin/tests"
+-          className="text-sm text-bluebook-muted hover:text-bluebook-accent hover:underline"
++          className="text-sm text-text-muted hover:text-accent hover:underline"
+         >
+           ← Back to tests
+         </Link>
+@@ -266,7 +266,7 @@ function Toggle({
+         type="checkbox"
+         checked={checked}
+         onChange={(e) => onChange(e.target.checked)}
+-        className="h-4 w-4 rounded border-bluebook-border text-bluebook-accent focus:ring-bluebook-accent"
++        className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent/20"
+       />
+       {label}
+     </label>
+diff --git a/src/components/admin/TestListAdmin.tsx b/src/components/admin/TestListAdmin.tsx
+index d499062..fdd1b84 100644
+--- a/src/components/admin/TestListAdmin.tsx
++++ b/src/components/admin/TestListAdmin.tsx
+@@ -5,6 +5,7 @@ import Link from 'next/link';
+ import { useRouter } from 'next/navigation';
+ import { Badge } from '@/components/ui/Badge';
+ import { Alert } from '@/components/ui/Alert';
++import { Button } from '@/components/ui/Button';
+ import { adminPut, adminPost, adminDelete } from '@/lib/admin-client';
+ 
+ interface TestRow {
+@@ -27,76 +28,42 @@ export function TestListAdmin({ tests }: TestListAdminProps) {
+   const [error, setError] = useState<string | null>(null);
+ 
+   const setPublished = async (t: TestRow, next: boolean) => {
+-    setBusy(t.id);
+-    setError(null);
+-    try {
+-      await adminPut(`/api/admin/tests/${t.id}`, { isPublished: next });
+-      router.refresh();
+-    } catch (err) {
+-      setError(err instanceof Error ? err.message : 'Update failed');
+-    } finally {
+-      setBusy(null);
+-    }
++    setBusy(t.id); setError(null);
++    try { await adminPut(`/api/admin/tests/${t.id}`, { isPublished: next }); router.refresh(); }
++    catch (err) { setError(err instanceof Error ? err.message : 'Update failed'); }
++    finally { setBusy(null); }
+   };
+ 
+   const duplicate = async (t: TestRow) => {
+-    setBusy(t.id);
+-    setError(null);
++    setBusy(t.id); setError(null);
+     try {
+-      const result = await adminPost<{ id: string }>(
+-        `/api/admin/tests/${t.id}/duplicate`
+-      );
++      const result = await adminPost<{ id: string }>(`/api/admin/tests/${t.id}/duplicate`);
+       router.push(`/admin/tests/${result.id}`);
+-    } catch (err) {
+-      setError(err instanceof Error ? err.message : 'Duplicate failed');
+-      setBusy(null);
+-    }
++    } catch (err) { setError(err instanceof Error ? err.message : 'Duplicate failed'); setBusy(null); }
+   };
+ 
+   const preview = async (t: TestRow) => {
+-    setBusy(t.id);
+-    setError(null);
++    setBusy(t.id); setError(null);
+     try {
+-      const result = await adminPost<{ sessionId: string }>(
+-        `/api/admin/tests/${t.id}/preview`
+-      );
++      const result = await adminPost<{ sessionId: string }>(`/api/admin/tests/${t.id}/preview`);
+       window.open(`/test/${result.sessionId}`, '_blank', 'noopener');
+-    } catch (err) {
+-      setError(err instanceof Error ? err.message : 'Preview failed');
+-    } finally {
+-      setBusy(null);
+-    }
++    } catch (err) { setError(err instanceof Error ? err.message : 'Preview failed'); }
++    finally { setBusy(null); }
+   };
+ 
+   const remove = async (t: TestRow) => {
+-    if (
+-      !window.confirm(
+-        `Delete "${t.title}"? ${t.sessionCount} session(s) will also be deleted. This cannot be undone.`
+-      )
+-    ) {
+-      return;
+-    }
+-    setBusy(t.id);
+-    setError(null);
+-    try {
+-      await adminDelete(`/api/admin/tests/${t.id}`);
+-      router.refresh();
+-    } catch (err) {
+-      setError(err instanceof Error ? err.message : 'Delete failed');
+-      setBusy(null);
+-    }
++    if (!window.confirm(`Delete "${t.title}"? ${t.sessionCount} session(s) will also be deleted.`)) return;
++    setBusy(t.id); setError(null);
++    try { await adminDelete(`/api/admin/tests/${t.id}`); router.refresh(); }
++    catch (err) { setError(err instanceof Error ? err.message : 'Delete failed'); setBusy(null); }
+   };
+ 
+   if (tests.length === 0) {
+     return (
+-      <div className="rounded-lg border border-bluebook-border bg-white p-8 text-center">
+-        <p className="text-sm text-bluebook-muted">
+-          No tests yet. Create your first one.
+-        </p>
+-        <Link href="/admin/tests/new" className="mt-4 inline-block">
+-          <span className="text-sm text-bluebook-accent hover:underline">
+-            + New test
+-          </span>
++      <div className="rounded-xl border border-border-subtle bg-surface p-10 text-center shadow-card">
++        <p className="text-sm text-text-muted">No tests yet.</p>
++        <Link href="/admin/tests/new" className="mt-3 inline-block text-sm font-medium text-accent hover:underline">
++          + Create your first test
+         </Link>
+       </div>
+     );
+@@ -105,75 +72,74 @@ export function TestListAdmin({ tests }: TestListAdminProps) {
+   return (
+     <div className="space-y-3">
+       {error && <Alert tone="error">{error}</Alert>}
++      <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-card">
++        <ul className="divide-y divide-border-subtle">
++          {tests.map((t) => (
++            <li key={t.id} className="flex flex-wrap items-start gap-4 px-5 py-4 transition-colors hover:bg-surface-hover">
++              {/* Info */}
++              <div className="min-w-0 flex-1">
++                <div className="flex flex-wrap items-center gap-2">
++                  <Link
++                    href={`/admin/tests/${t.id}`}
++                    className="text-sm font-semibold text-text-primary hover:text-accent hover:underline"
++                  >
++                    {t.title}
++                  </Link>
++                  <Badge tone={t.isPublished ? 'success' : 'neutral'}>
++                    {t.isPublished ? 'Published' : 'Draft'}
++                  </Badge>
++                </div>
++                {t.description && (
++                  <p className="mt-1 line-clamp-1 text-xs text-text-muted">{t.description}</p>
++                )}
++                <div className="mt-1.5 flex flex-wrap gap-3 text-xs text-text-muted">
++                  <span>{t.moduleCount} module{t.moduleCount === 1 ? '' : 's'}</span>
++                  <span>·</span>
++                  <span>{t.sessionCount} attempt{t.sessionCount === 1 ? '' : 's'}</span>
++                  <span>·</span>
++                  <span>{new Date(t.createdAt).toLocaleDateString()}</span>
++                </div>
++              </div>
+ 
+-      <ul className="divide-y divide-bluebook-border overflow-hidden rounded-lg border border-bluebook-border bg-white">
+-        {tests.map((t) => (
+-          <li key={t.id} className="flex flex-wrap items-start gap-4 p-4">
+-            <div className="min-w-0 flex-1">
+-              <div className="flex flex-wrap items-center gap-2">
+-                <Link
+-                  href={`/admin/tests/${t.id}`}
+-                  className="text-base font-semibold hover:text-bluebook-accent hover:underline"
++              {/* Actions */}
++              <div className="flex flex-wrap items-center gap-1.5">
++                <button
++                  type="button"
++                  onClick={() => setPublished(t, !t.isPublished)}
++                  disabled={busy === t.id}
++                  className="rounded-md border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-hover disabled:opacity-50"
+                 >
+-                  {t.title}
+-                </Link>
+-                <Badge tone={t.isPublished ? 'success' : 'neutral'}>
+-                  {t.isPublished ? 'published' : 'draft'}
+-                </Badge>
+-              </div>
+-              {t.description && (
+-                <p className="mt-1 line-clamp-2 text-sm text-bluebook-muted">
+-                  {t.description}
+-                </p>
+-              )}
+-              <div className="mt-2 flex flex-wrap gap-3 text-xs text-bluebook-muted">
+-                <span>
+-                  {t.moduleCount} module{t.moduleCount === 1 ? '' : 's'}
+-                </span>
+-                <span>
+-                  {t.sessionCount} attempt{t.sessionCount === 1 ? '' : 's'}
+-                </span>
+-                <span>created {new Date(t.createdAt).toLocaleDateString()}</span>
++                  {t.isPublished ? 'Unpublish' : 'Publish'}
++                </button>
++                <button
++                  type="button"
++                  onClick={() => preview(t)}
++                  disabled={busy === t.id}
++                  className="rounded-md border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-hover disabled:opacity-50"
++                >
++                  Preview
++                </button>
++                <button
++                  type="button"
++                  onClick={() => duplicate(t)}
++                  disabled={busy === t.id}
++                  className="rounded-md border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-hover disabled:opacity-50"
++                >
++                  Duplicate
++                </button>
++                <button
++                  type="button"
++                  onClick={() => remove(t)}
++                  disabled={busy === t.id}
++                  className="rounded-md border border-state-danger/25 px-3 py-1.5 text-xs font-medium text-state-danger transition-colors hover:bg-state-danger-bg disabled:opacity-50"
++                >
++                  Delete
++                </button>
+               </div>
+-            </div>
+-
+-            <div className="flex flex-wrap items-center gap-2">
+-              <button
+-                type="button"
+-                onClick={() => setPublished(t, !t.isPublished)}
+-                disabled={busy === t.id}
+-                className="rounded border border-bluebook-border px-3 py-1.5 text-xs hover:bg-bluebook-bg disabled:opacity-50"
+-              >
+-                {t.isPublished ? 'Unpublish' : 'Publish'}
+-              </button>
+-              <button
+-                type="button"
+-                onClick={() => preview(t)}
+-                disabled={busy === t.id}
+-                className="rounded border border-bluebook-border px-3 py-1.5 text-xs hover:bg-bluebook-bg disabled:opacity-50"
+-              >
+-                Preview
+-              </button>
+-              <button
+-                type="button"
+-                onClick={() => duplicate(t)}
+-                disabled={busy === t.id}
+-                className="rounded border border-bluebook-border px-3 py-1.5 text-xs hover:bg-bluebook-bg disabled:opacity-50"
+-              >
+-                Duplicate
+-              </button>
+-              <button
+-                type="button"
+-                onClick={() => remove(t)}
+-                disabled={busy === t.id}
+-                className="rounded border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
+-              >
+-                Delete
+-              </button>
+-            </div>
+-          </li>
+-        ))}
+-      </ul>
++            </li>
++          ))}
++        </ul>
++      </div>
+     </div>
+   );
+ }
+diff --git a/src/components/admin/TestWizard.tsx b/src/components/admin/TestWizard.tsx
+index bce0121..4722b87 100644
+--- a/src/components/admin/TestWizard.tsx
++++ b/src/components/admin/TestWizard.tsx
+@@ -43,7 +43,7 @@ export function TestWizard() {
+     <form onSubmit={submit} className="max-w-2xl space-y-6">
+       {error && <Alert tone="error">{error}</Alert>}
+ 
+-      <div className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <div className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         <h2 className="text-base font-semibold">Basics</h2>
+ 
+         <label className="block space-y-1">
+@@ -55,7 +55,7 @@ export function TestWizard() {
+             placeholder="SAT Practice Test 1"
+             required
+             autoFocus
+-            className="h-10 w-full rounded-md border border-bluebook-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++            className="h-10 w-full rounded-md border border-border-default px-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+ 
+@@ -66,7 +66,7 @@ export function TestWizard() {
+             onChange={(e) => setDescription(e.target.value)}
+             rows={3}
+             placeholder="Short description shown on the landing page."
+-            className="w-full rounded-md border border-bluebook-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++            className="w-full rounded-md border border-border-default px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+ 
+@@ -79,12 +79,12 @@ export function TestWizard() {
+             placeholder="Students enter this to start"
+             required
+             minLength={4}
+-            className="h-10 w-full rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
++            className="h-10 w-full rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+           />
+         </label>
+       </div>
+ 
+-      <div className="space-y-3 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
++      <div className="space-y-3 rounded-lg border border-border-default bg-surface p-6 shadow-card">
+         <h2 className="text-base font-semibold">Options</h2>
+ 
+         <Toggle
+@@ -147,11 +147,11 @@ function Toggle({
+         type="checkbox"
+         checked={checked}
+         onChange={(e) => onChange(e.target.checked)}
+-        className="mt-1 h-4 w-4 rounded border-bluebook-border text-bluebook-accent focus:ring-bluebook-accent"
++        className="mt-1 h-4 w-4 rounded border-border-default text-accent focus:ring-accent/20"
+       />
+       <div>
+         <div className="text-sm font-medium">{label}</div>
+-        <div className="text-xs text-bluebook-muted">{description}</div>
++        <div className="text-xs text-text-muted">{description}</div>
+       </div>
+     </label>
+   );
+diff --git a/src/components/exam/ConfirmSubmitDialog.tsx b/src/components/exam/ConfirmSubmitDialog.tsx
+index f1f674a..879cf8b 100644
+--- a/src/components/exam/ConfirmSubmitDialog.tsx
++++ b/src/components/exam/ConfirmSubmitDialog.tsx
+@@ -1,5 +1,6 @@
+ 'use client';
+ 
++import clsx from 'clsx';
+ import { Modal } from '@/components/ui/Modal';
+ import { Button } from '@/components/ui/Button';
+ 
+@@ -20,6 +21,8 @@ export function ConfirmSubmitDialog({
+   isLastModule,
+   submitting,
+ }: ConfirmSubmitDialogProps) {
++  const hasUnanswered = unanswered > 0;
++
+   return (
+     <Modal
+       open={open}
+@@ -31,18 +34,47 @@ export function ConfirmSubmitDialog({
+             Keep working
+           </Button>
+           <Button onClick={onConfirm} loading={submitting}>
+-            {isLastModule ? 'Submit final' : 'Submit section'}
++            {isLastModule ? 'Submit & finish' : 'Submit section'}
+           </Button>
+         </>
+       }
+     >
+-      <p className="text-sm text-text-secondary">
+-        {unanswered > 0
+-          ? `You have ${unanswered} unanswered question${
+-              unanswered === 1 ? '' : 's'
+-            }. Once you submit, you can't return to this section.`
+-          : "All questions answered. Once you submit, you can't return to this section."}
+-      </p>
++      <div className="space-y-4">
++        {/* Status banner */}
++        <div
++          className={clsx(
++            'flex items-start gap-3 rounded-lg border p-4',
++            hasUnanswered
++              ? 'border-state-warning/30 bg-state-warning-bg'
++              : 'border-state-success/30 bg-state-success-bg'
++          )}
++        >
++          <span
++            className={clsx(
++              'mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full text-sm font-bold',
++              hasUnanswered
++                ? 'bg-state-warning text-white'
++                : 'bg-state-success text-white'
++            )}
++            aria-hidden
++          >
++            {hasUnanswered ? '!' : '✓'}
++          </span>
++          <p className={clsx(
++            'text-sm font-medium',
++            hasUnanswered ? 'text-state-warning' : 'text-state-success'
++          )}>
++            {hasUnanswered
++              ? `${unanswered} question${unanswered === 1 ? '' : 's'} left unanswered`
++              : 'All questions answered'}
++          </p>
++        </div>
++
++        <p className="text-sm text-text-secondary">
++          Once you submit{isLastModule ? ' the final section' : ' this section'}, you{' '}
++          <strong className="text-text-primary">cannot go back</strong> to change your answers.
++        </p>
++      </div>
+     </Modal>
+   );
+ }
+diff --git a/src/components/exam/DesmosCalculator.tsx b/src/components/exam/DesmosCalculator.tsx
+index 899b613..2ead1ae 100644
+--- a/src/components/exam/DesmosCalculator.tsx
++++ b/src/components/exam/DesmosCalculator.tsx
+@@ -16,18 +16,14 @@ interface DesmosGlobal {
+ }
+ 
+ declare global {
+-  interface Window {
+-    Desmos?: DesmosGlobal;
+-  }
++  interface Window { Desmos?: DesmosGlobal; }
+ }
+ 
+ const DESMOS_SRC =
+   'https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fae6';
+-
+ const DESMOS_IFRAME = 'https://www.desmos.com/calculator';
+ 
+ let scriptPromise: Promise<void> | null = null;
+-
+ function loadDesmos(): Promise<void> {
+   if (typeof window === 'undefined') return Promise.resolve();
+   if (window.Desmos) return Promise.resolve();
+@@ -37,12 +33,9 @@ function loadDesmos(): Promise<void> {
+     s.src = DESMOS_SRC;
+     s.async = true;
+     s.onload = () => resolve();
+-    s.onerror = () => reject(new Error('Desmos script failed to load'));
++    s.onerror = () => reject(new Error('Desmos failed to load'));
+     document.head.appendChild(s);
+-
+-    setTimeout(() => {
+-      if (!window.Desmos) reject(new Error('Desmos API did not initialize'));
+-    }, 8000);
++    setTimeout(() => { if (!window.Desmos) reject(new Error('Timeout')); }, 8000);
+   });
+   return scriptPromise;
+ }
+@@ -52,81 +45,122 @@ export function DesmosCalculator({ open, onClose }: DesmosCalculatorProps) {
+   const calcRef = useRef<{ destroy: () => void } | null>(null);
+   const [mode, setMode] = useState<'loading' | 'api' | 'iframe'>('loading');
+ 
++  // Drag state
++  const panelRef = useRef<HTMLDivElement>(null);
++  const dragState = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
++  const [pos, setPos] = useState({ x: 0, y: 0 });
++  const [dragging, setDragging] = useState(false);
++
+   useEffect(() => {
+     if (!open) return;
+     let cancelled = false;
+-
+     loadDesmos()
+       .then(() => {
+         if (cancelled) return;
+-        if (!containerRef.current || !window.Desmos) {
+-          setMode('iframe');
+-          return;
+-        }
++        if (!containerRef.current || !window.Desmos) { setMode('iframe'); return; }
+         if (!calcRef.current) {
+-          calcRef.current = window.Desmos.GraphingCalculator(
+-            containerRef.current,
+-            {
+-              expressions: true,
+-              settingsMenu: false,
+-              zoomButtons: true,
+-            }
+-          );
++          calcRef.current = window.Desmos.GraphingCalculator(containerRef.current, {
++            expressions: true, settingsMenu: false, zoomButtons: true,
++          });
+         }
+         setMode('api');
+       })
+-      .catch(() => {
+-        if (!cancelled) setMode('iframe');
+-      });
+-
+-    return () => {
+-      cancelled = true;
+-    };
++      .catch(() => { if (!cancelled) setMode('iframe'); });
++    return () => { cancelled = true; };
+   }, [open]);
+ 
+   useEffect(() => {
+-    return () => {
+-      calcRef.current?.destroy();
+-      calcRef.current = null;
+-    };
++    return () => { calcRef.current?.destroy(); calcRef.current = null; };
+   }, []);
+ 
++  // Mouse drag handlers
++  const onMouseDown = (e: React.MouseEvent) => {
++    if (e.button !== 0) return;
++    e.preventDefault();
++    const panel = panelRef.current;
++    if (!panel) return;
++    const rect = panel.getBoundingClientRect();
++    dragState.current = {
++      startX: e.clientX, startY: e.clientY,
++      origX: rect.left, origY: rect.top,
++    };
++    setDragging(true);
++    const onMove = (me: MouseEvent) => {
++      if (!dragState.current) return;
++      const dx = me.clientX - dragState.current.startX;
++      const dy = me.clientY - dragState.current.startY;
++      setPos({ x: dragState.current.origX + dx, y: dragState.current.origY + dy });
++    };
++    const onUp = () => {
++      dragState.current = null;
++      setDragging(false);
++      window.removeEventListener('mousemove', onMove);
++      window.removeEventListener('mouseup', onUp);
++    };
++    window.addEventListener('mousemove', onMove);
++    window.addEventListener('mouseup', onUp);
++  };
++
+   if (!open) return null;
+ 
++  const hasPos = pos.x !== 0 || pos.y !== 0;
++
+   return (
+     <div
+-      className="fixed bottom-4 right-4 z-40 flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-modal"
+-      style={{ width: 420, height: 520 }}
++      ref={panelRef}
++      className="fixed z-40 flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-modal"
++      style={{
++        width: 420,
++        height: 520,
++        ...(hasPos
++          ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
++          : { right: 16, bottom: 16 }),
++      }}
+     >
+-      <div className="flex items-center justify-between border-b border-border-subtle bg-surface-alt px-4 py-2.5">
+-        <span className="text-sm font-semibold text-text-primary">Calculator</span>
++      {/* Drag handle header */}
++      <div
++        onMouseDown={onMouseDown}
++        className={clsx(
++          'flex items-center justify-between border-b border-border-subtle bg-surface-alt px-4 py-2.5',
++          dragging ? 'cursor-grabbing' : 'cursor-grab'
++        )}
++      >
++        <div className="flex items-center gap-2">
++          {/* Grip dots */}
++          <svg aria-hidden className="h-4 w-4 flex-none text-text-muted" viewBox="0 0 16 16" fill="currentColor">
++            <circle cx="5" cy="5" r="1.5"/><circle cx="5" cy="11" r="1.5"/>
++            <circle cx="11" cy="5" r="1.5"/><circle cx="11" cy="11" r="1.5"/>
++          </svg>
++          <span className="select-none text-sm font-semibold text-text-primary">Calculator</span>
++        </div>
+         <button
+           type="button"
+           onClick={onClose}
++          onMouseDown={(e) => e.stopPropagation()}
+           className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
+           aria-label="Close calculator"
+         >
+-          ✕
++          <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
++            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
++          </svg>
+         </button>
+       </div>
+ 
+       {mode === 'iframe' ? (
+-        <iframe
+-          src={DESMOS_IFRAME}
+-          title="Desmos Calculator"
+-          className="flex-1 border-0"
+-          allow="clipboard-write"
+-        />
++        <iframe src={DESMOS_IFRAME} title="Desmos Calculator" className="flex-1 border-0" allow="clipboard-write" />
+       ) : (
+         <div
+           ref={containerRef}
+-          className={clsx(
+-            'flex-1',
+-            mode === 'loading' && 'flex items-center justify-center'
+-          )}
++          className={clsx('flex-1', mode === 'loading' && 'flex items-center justify-center')}
+         >
+           {mode === 'loading' && (
+-            <span className="text-sm text-text-muted">Loading calculator…</span>
++            <div className="flex flex-col items-center gap-3 text-sm text-text-muted">
++              <svg className="h-6 w-6 animate-spin text-accent" fill="none" viewBox="0 0 24 24">
++                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
++                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
++              </svg>
++              Loading calculator…
++            </div>
+           )}
+         </div>
+       )}
+diff --git a/src/components/exam/ExamHeader.tsx b/src/components/exam/ExamHeader.tsx
+index 0ed1cba..7263865 100644
+--- a/src/components/exam/ExamHeader.tsx
++++ b/src/components/exam/ExamHeader.tsx
+@@ -28,9 +28,10 @@ export function ExamHeader({
+   onOpenNavigator,
+ }: ExamHeaderProps) {
+   return (
+-    <header className="sticky top-0 z-10 border-b border-border-subtle bg-surface-alt">
++    <header className="sticky top-0 z-10 border-b border-border-subtle bg-surface shadow-card">
+       <div className="mx-auto grid h-14 max-w-7xl grid-cols-3 items-center px-4 lg:px-6">
+-        {/* Left: section title + flag */}
++
++        {/* LEFT: module title + flag */}
+         <div className="flex min-w-0 items-center gap-3">
+           <span className="truncate text-sm font-semibold text-text-primary">
+             {moduleTitle}
+@@ -38,35 +39,43 @@ export function ExamHeader({
+           <FlagButton flagged={flagged} onToggle={onToggleFlag} />
+         </div>
+ 
+-        {/* Center: timer */}
++        {/* CENTER: timer */}
+         <div className="flex justify-center">
+           <ExamTimer secondsRemaining={secondsRemaining} onExpire={onExpire} />
+         </div>
+ 
+-        {/* Right: tools */}
++        {/* RIGHT: tools */}
+         <div className="flex items-center justify-end gap-2">
+           {showCalculator && (
+             <button
+               type="button"
+               onClick={onToggleCalculator}
+               className={clsx(
+-                'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors focus-ring',
++                'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-ring',
+                 calculatorOpen
+-                  ? 'border-accent bg-accent-subtle text-accent'
++                  ? 'border-accent/30 bg-accent-subtle text-accent'
+                   : 'border-border-default bg-surface text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+               )}
+             >
+-              <span aria-hidden className="text-sm leading-none">📐</span>
++              {/* Calculator icon */}
++              <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
++                <rect x="4" y="2" width="16" height="20" rx="2" />
++                <path strokeLinecap="round" d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2" />
++              </svg>
+               <span className="hidden sm:inline">Calculator</span>
+             </button>
+           )}
+ 
++          {/* Navigator button — mobile only */}
+           <button
+             type="button"
+             onClick={onOpenNavigator}
+-            className="rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-ring lg:hidden"
++            className="inline-flex items-center gap-2 rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-ring lg:hidden"
+           >
+-            Questions
++            <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
++              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
++            </svg>
++            <span className="hidden sm:inline">Questions</span>
+           </button>
+         </div>
+       </div>
+diff --git a/src/components/exam/ExamTimer.tsx b/src/components/exam/ExamTimer.tsx
+index 4216cee..59b446a 100644
+--- a/src/components/exam/ExamTimer.tsx
++++ b/src/components/exam/ExamTimer.tsx
+@@ -53,24 +53,35 @@ export function ExamTimer({ secondsRemaining, onTick, onExpire, className }: Exa
+     return () => clearInterval(id);
+   }, []);
+ 
+-  const tone =
+-    seconds <= 60
+-      ? 'text-state-danger'
+-      : seconds <= 300
+-      ? 'text-state-warning'
+-      : 'text-text-primary';
++  const isWarning = seconds <= 300 && seconds > 60;
++  const isDanger  = seconds <= 60;
+ 
+   return (
+     <div
+       className={clsx(
+-        'flex items-center gap-2 rounded-md bg-surface px-3 py-1.5',
+-        'font-timer text-base font-medium',
+-        tone,
++        'flex items-center gap-2 rounded-md px-3 py-1.5',
++        'font-timer text-sm font-semibold tabular-nums transition-colors',
++        isDanger
++          ? 'bg-state-danger-bg text-state-danger ring-1 ring-state-danger/20'
++          : isWarning
++          ? 'bg-state-warning-bg text-state-warning ring-1 ring-state-warning/20'
++          : 'bg-surface-alt text-text-primary',
+         className
+       )}
+       aria-live="polite"
+     >
+-      <span aria-hidden className="text-sm opacity-60">⏱</span>
++      {/* Clock icon */}
++      <svg
++        aria-hidden
++        className={clsx('h-3.5 w-3.5 flex-none', isDanger && 'animate-pulse')}
++        fill="none"
++        viewBox="0 0 24 24"
++        stroke="currentColor"
++        strokeWidth={2}
++      >
++        <circle cx="12" cy="12" r="9" />
++        <path strokeLinecap="round" d="M12 7v5l3 3" />
++      </svg>
+       <span aria-label="Time remaining">{formatTime(seconds)}</span>
+     </div>
+   );
+diff --git a/src/components/exam/FlagButton.tsx b/src/components/exam/FlagButton.tsx
+index 06d3e3c..861f585 100644
+--- a/src/components/exam/FlagButton.tsx
++++ b/src/components/exam/FlagButton.tsx
+@@ -22,9 +22,21 @@ export function FlagButton({ flagged, onToggle, className }: FlagButtonProps) {
+       )}
+       aria-pressed={flagged}
+     >
+-      <span aria-hidden className="text-sm leading-none">
+-        {flagged ? '⚑' : '⚐'}
+-      </span>
++      {/* Flag SVG icon */}
++      <svg
++        aria-hidden
++        className="h-3.5 w-3.5"
++        viewBox="0 0 16 16"
++        fill={flagged ? 'currentColor' : 'none'}
++        stroke="currentColor"
++        strokeWidth={1.5}
++      >
++        <path
++          strokeLinecap="round"
++          strokeLinejoin="round"
++          d="M3 2v12M3 2h9l-2.5 4L12 10H3"
++        />
++      </svg>
+       <span className="hidden sm:inline">{flagged ? 'Flagged' : 'Flag'}</span>
+     </button>
+   );
+diff --git a/src/components/exam/GridInInput.tsx b/src/components/exam/GridInInput.tsx
+index 182f75c..bfae636 100644
+--- a/src/components/exam/GridInInput.tsx
++++ b/src/components/exam/GridInInput.tsx
+@@ -14,33 +14,69 @@ export function GridInInput({ value, onChange, disabled, className }: GridInInpu
+   const [focused, setFocused] = useState(false);
+ 
+   return (
+-    <div className={clsx('space-y-2', className)}>
+-      <input
+-        type="text"
+-        inputMode="text"
+-        autoComplete="off"
+-        autoCorrect="off"
+-        spellCheck={false}
+-        value={value}
+-        disabled={disabled}
+-        onChange={(e) => onChange(e.target.value)}
+-        onFocus={() => setFocused(true)}
+-        onBlur={() => setFocused(false)}
+-        placeholder="Enter your answer"
+-        className={clsx(
+-          'h-12 w-64 rounded-md border border-border-default bg-surface px-4',
+-          'font-timer text-lg text-text-primary',
+-          'focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
+-        )}
+-      />
+-      {focused && (
+-        <p className="text-xs text-text-muted">
+-          Accepts integers (<code className="font-mono">3</code>), decimals (
+-          <code className="font-mono">3.5</code>), negatives (
+-          <code className="font-mono">-2</code>), and fractions (
+-          <code className="font-mono">3/4</code>).
+-        </p>
+-      )}
++    <div className={clsx('space-y-3', className)}>
++      {/* Label */}
++      <div className="flex items-center gap-2">
++        <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
++          Student-Produced Response
++        </span>
++        <div className="h-px flex-1 bg-border-subtle" />
++      </div>
++
++      {/* Input */}
++      <div className="flex items-start gap-4">
++        <div className="relative">
++          <input
++            type="text"
++            inputMode="text"
++            autoComplete="off"
++            autoCorrect="off"
++            spellCheck={false}
++            value={value}
++            disabled={disabled}
++            onChange={(e) => onChange(e.target.value)}
++            onFocus={() => setFocused(true)}
++            onBlur={() => setFocused(false)}
++            placeholder="0"
++            className={clsx(
++              'h-14 w-36 rounded-lg border-2 bg-surface px-4 text-center',
++              'font-timer text-2xl font-semibold text-text-primary',
++              'placeholder:text-text-muted/40',
++              'transition-colors focus:outline-none',
++              focused
++                ? 'border-accent ring-4 ring-accent/10'
++                : 'border-border-default hover:border-border-focus/40',
++              disabled && 'opacity-50 cursor-not-allowed'
++            )}
++          />
++          {/* Underline slots — decorative, like SAT answer grid */}
++          <div className="mt-1 flex justify-center gap-px">
++            {Array.from({ length: 5 }).map((_, i) => (
++              <div key={i} className="h-0.5 w-5 rounded-full bg-border-default" />
++            ))}
++          </div>
++        </div>
++
++        {/* Format hints */}
++        <div className="pt-1 text-xs text-text-muted space-y-1.5 leading-relaxed">
++          <p className="font-medium text-text-secondary">Accepted formats</p>
++          <ul className="space-y-1">
++            {[
++              ['Integer', '4'],
++              ['Decimal', '3.5'],
++              ['Negative', '-2'],
++              ['Fraction', '3/4'],
++            ].map(([label, ex]) => (
++              <li key={label} className="flex items-center gap-2">
++                <span className="text-text-muted">{label}</span>
++                <code className="rounded bg-surface-alt px-1.5 py-0.5 font-mono text-xs text-text-primary">
++                  {ex}
++                </code>
++              </li>
++            ))}
++          </ul>
++        </div>
++      </div>
+     </div>
+   );
+ }
+diff --git a/src/components/exam/QuestionNavigator.tsx b/src/components/exam/QuestionNavigator.tsx
+index fc22f7d..11f08d9 100644
+--- a/src/components/exam/QuestionNavigator.tsx
++++ b/src/components/exam/QuestionNavigator.tsx
+@@ -18,9 +18,31 @@ export function QuestionNavigator({
+   currentIndex,
+   onNavigate,
+ }: QuestionNavigatorProps) {
++  const answeredCount = questions.filter((q) => {
++    const a = answers[q.id];
++    return a != null && a !== '';
++  }).length;
++  const total = questions.length;
++  const pct = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
++
+   return (
+     <div className="space-y-4">
+-      <div className="grid grid-cols-5 gap-2">
++      {/* Progress summary */}
++      <div>
++        <div className="mb-1.5 flex items-center justify-between text-xs text-text-muted">
++          <span>{answeredCount} of {total} answered</span>
++          <span className="font-medium text-text-primary">{pct}%</span>
++        </div>
++        <div className="h-1.5 overflow-hidden rounded-full bg-border-subtle">
++          <div
++            className="h-full rounded-full bg-accent transition-all duration-500"
++            style={{ width: `${pct}%` }}
++          />
++        </div>
++      </div>
++
++      {/* Grid */}
++      <div className="grid grid-cols-5 gap-1.5">
+         {questions.map((q, idx) => {
+           const answer = answers[q.id];
+           const isAnswered = answer != null && answer !== '';
+@@ -32,19 +54,20 @@ export function QuestionNavigator({
+               type="button"
+               onClick={() => onNavigate(idx)}
+               className={clsx(
+-                'relative flex h-10 items-center justify-center rounded-md border text-sm font-semibold transition-all focus-ring',
++                'relative flex h-9 items-center justify-center rounded-md border text-xs font-semibold transition-all focus-ring',
+                 isCurrent
+                   ? 'border-accent bg-accent text-white shadow-sm'
+                   : isAnswered
+-                  ? 'border-accent/30 bg-surface-selected text-accent hover:border-accent/50'
+-                  : 'border-border-default bg-surface text-text-secondary hover:border-border-default hover:bg-surface-hover'
++                  ? 'border-accent/30 bg-surface-selected text-accent hover:border-accent/50 hover:bg-accent-subtle'
++                  : 'border-border-default bg-surface text-text-muted hover:border-border-default hover:bg-surface-hover hover:text-text-primary'
+               )}
+-              aria-label={`Question ${idx + 1}${isFlagged ? ' (flagged)' : ''}`}
++              aria-label={`Question ${idx + 1}${isFlagged ? ' (flagged)' : ''}${isAnswered ? ' (answered)' : ''}`}
++              aria-current={isCurrent ? 'true' : undefined}
+             >
+               {idx + 1}
+               {isFlagged && (
+                 <span
+-                  className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-flag-active ring-2 ring-surface"
++                  className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-flag-active ring-2 ring-surface"
+                   aria-hidden
+                 />
+               )}
+@@ -52,17 +75,27 @@ export function QuestionNavigator({
+           );
+         })}
+       </div>
+-      <div className="space-y-1.5 border-t border-border-subtle pt-3 text-xs text-text-muted">
+-        <div className="flex items-center gap-2">
+-          <span className="inline-block h-3 w-3 rounded border border-accent/30 bg-surface-selected" />
++
++      {/* Legend */}
++      <div className="space-y-1.5 border-t border-border-subtle pt-3">
++        <div className="flex items-center gap-2 text-xs text-text-muted">
++          <span className="flex h-3 w-3 items-center justify-center rounded border border-accent bg-accent" aria-hidden>
++            <span className="h-1 w-1 rounded-full bg-white" />
++          </span>
++          Current
++        </div>
++        <div className="flex items-center gap-2 text-xs text-text-muted">
++          <span className="inline-block h-3 w-3 rounded border border-accent/30 bg-surface-selected" aria-hidden />
+           Answered
+         </div>
+-        <div className="flex items-center gap-2">
+-          <span className="inline-block h-3 w-3 rounded border border-border-default bg-surface" />
+-          Not answered
++        <div className="flex items-center gap-2 text-xs text-text-muted">
++          <span className="inline-block h-3 w-3 rounded border border-border-default bg-surface" aria-hidden />
++          Unanswered
+         </div>
+-        <div className="flex items-center gap-2">
+-          <span className="inline-block h-3 w-3 rounded-full bg-flag-active" />
++        <div className="flex items-center gap-2 text-xs text-text-muted">
++          <span className="relative inline-block h-3 w-3 rounded border border-border-default bg-surface" aria-hidden>
++            <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-flag-active ring-1 ring-surface" />
++          </span>
+           Flagged
+         </div>
+       </div>
+diff --git a/src/components/results/PDFDownloadButton.tsx b/src/components/results/PDFDownloadButton.tsx
+index 1a12003..697a241 100644
+--- a/src/components/results/PDFDownloadButton.tsx
++++ b/src/components/results/PDFDownloadButton.tsx
+@@ -31,7 +31,7 @@ export function PDFDownloadButton({ targetRef, filename }: PDFDownloadButtonProp
+       <Button variant="secondary" onClick={download} loading={busy}>
+         Download PDF
+       </Button>
+-      {error && <span className="text-xs text-bluebook-wrong">{error}</span>}
++      {error && <span className="text-xs text-state-danger">{error}</span>}
+     </div>
+   );
+ }
+diff --git a/src/components/ui/Alert.tsx b/src/components/ui/Alert.tsx
+index 6855073..9f4fb7e 100644
+--- a/src/components/ui/Alert.tsx
++++ b/src/components/ui/Alert.tsx
+@@ -6,29 +6,39 @@ type Tone = 'info' | 'success' | 'warning' | 'error';
+ export interface AlertProps {
+   tone?: Tone;
+   title?: string;
+-  children?: ReactNode;
++  children: ReactNode;
+   className?: string;
+ }
+ 
+ const toneClasses: Record<Tone, string> = {
+-  info: 'bg-accent-subtle border-accent/20 text-text-primary',
+-  success: 'bg-state-success-bg border-state-success/20 text-state-success',
+-  warning: 'bg-state-warning-bg border-state-warning/20 text-state-warning',
+-  error: 'bg-state-danger-bg border-state-danger/20 text-state-danger',
++  info:    'bg-accent-subtle border-accent/20 text-text-primary',
++  success: 'bg-state-success-bg border-state-success/25 text-state-success',
++  warning: 'bg-state-warning-bg border-state-warning/25 text-state-warning',
++  error:   'bg-state-danger-bg border-state-danger/25 text-state-danger',
++};
++
++const icons: Record<Tone, ReactNode> = {
++  info:    <svg aria-hidden className="h-4 w-4 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/></svg>,
++  success: <svg aria-hidden className="h-4 w-4 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
++  warning: <svg aria-hidden className="h-4 w-4 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>,
++  error:   <svg aria-hidden className="h-4 w-4 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M15 9l-6 6M9 9l6 6"/></svg>,
+ };
+ 
+ export function Alert({ tone = 'info', title, children, className }: AlertProps) {
+   return (
+     <div
+-      role={tone === 'error' ? 'alert' : 'status'}
++      role="alert"
+       className={clsx(
+-        'rounded-md border px-4 py-3 text-sm',
++        'flex gap-3 rounded-lg border px-4 py-3 text-sm',
+         toneClasses[tone],
+         className
+       )}
+     >
+-      {title && <p className="font-semibold">{title}</p>}
+-      {children && <div className={clsx(title && 'mt-1')}>{children}</div>}
++      <span className="mt-0.5">{icons[tone]}</span>
++      <div className="flex-1 space-y-0.5">
++        {title && <p className="font-semibold">{title}</p>}
++        <div className="leading-relaxed opacity-90">{children}</div>
++      </div>
+     </div>
+   );
+ }
+diff --git a/src/components/ui/Badge.tsx b/src/components/ui/Badge.tsx
+index bf8284d..1ce6521 100644
+--- a/src/components/ui/Badge.tsx
++++ b/src/components/ui/Badge.tsx
+@@ -5,24 +5,23 @@ type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger';
+ 
+ export interface BadgeProps {
+   tone?: Tone;
+-  className?: string;
+   children: ReactNode;
++  className?: string;
+ }
+ 
+ const toneClasses: Record<Tone, string> = {
+   neutral: 'bg-surface-alt text-text-secondary border-border-default',
+-  accent: 'bg-accent-subtle text-accent border-accent/20',
+-  success: 'bg-state-success-bg text-state-success border-state-success/20',
+-  warning: 'bg-state-warning-bg text-state-warning border-state-warning/20',
+-  danger: 'bg-state-danger-bg text-state-danger border-state-danger/20',
++  accent:  'bg-accent-subtle text-accent border-accent/20',
++  success: 'bg-state-success-bg text-state-success border-state-success/25',
++  warning: 'bg-state-warning-bg text-state-warning border-state-warning/25',
++  danger:  'bg-state-danger-bg text-state-danger border-state-danger/25',
+ };
+ 
+-export function Badge({ tone = 'neutral', className, children }: BadgeProps) {
++export function Badge({ tone = 'neutral', children, className }: BadgeProps) {
+   return (
+     <span
+       className={clsx(
+-        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
+-        'text-xs font-medium whitespace-nowrap',
++        'inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium',
+         toneClasses[tone],
+         className
+       )}
+diff --git a/src/components/ui/Button.tsx b/src/components/ui/Button.tsx
+index db1bed9..64a257d 100644
+--- a/src/components/ui/Button.tsx
++++ b/src/components/ui/Button.tsx
+@@ -1,10 +1,11 @@
+-import { forwardRef, type ButtonHTMLAttributes } from 'react';
+ import clsx from 'clsx';
++import { Spinner } from './Spinner';
++import type { ComponentPropsWithoutRef } from 'react';
+ 
+ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+ type Size = 'sm' | 'md' | 'lg';
+ 
+-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
++export interface ButtonProps extends ComponentPropsWithoutRef<'button'> {
+   variant?: Variant;
+   size?: Size;
+   loading?: boolean;
+@@ -12,47 +13,44 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+ 
+ const variantClasses: Record<Variant, string> = {
+   primary:
+-    'bg-accent text-white hover:bg-accent-hover disabled:bg-accent/50 disabled:text-white/70',
++    'bg-accent text-white hover:bg-accent-hover active:bg-accent-hover disabled:bg-accent/40 disabled:text-white/70',
+   secondary:
+-    'bg-surface text-text-primary border border-border-default hover:bg-surface-hover disabled:opacity-50',
++    'bg-surface text-text-primary border border-border-default hover:bg-surface-hover active:bg-surface-hover disabled:opacity-50',
+   ghost:
+-    'bg-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary disabled:opacity-50',
++    'bg-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary active:bg-surface-hover disabled:opacity-50',
+   danger:
+-    'bg-state-danger text-white hover:bg-red-800 disabled:bg-state-danger/50',
++    'bg-state-danger text-white hover:bg-red-800 active:bg-red-800 disabled:bg-state-danger/40',
+ };
+ 
+ const sizeClasses: Record<Size, string> = {
+-  sm: 'h-8 px-3 text-sm',
+-  md: 'h-10 px-4 text-sm',
+-  lg: 'h-12 px-6 text-base',
++  sm: 'h-8 px-3 text-xs rounded-md gap-1.5',
++  md: 'h-9 px-4 text-sm rounded-md gap-2',
++  lg: 'h-11 px-5 text-sm rounded-lg gap-2',
+ };
+ 
+-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+-  function Button(
+-    { variant = 'primary', size = 'md', loading = false, className, children, disabled, ...rest },
+-    ref
+-  ) {
+-    return (
+-      <button
+-        ref={ref}
+-        disabled={disabled || loading}
+-        className={clsx(
+-          'inline-flex items-center justify-center gap-2 rounded-md font-medium',
+-          'transition-colors focus-ring disabled:cursor-not-allowed',
+-          variantClasses[variant],
+-          sizeClasses[size],
+-          className
+-        )}
+-        {...rest}
+-      >
+-        {loading && (
+-          <span
+-            className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"
+-            aria-hidden
+-          />
+-        )}
+-        {children}
+-      </button>
+-    );
+-  }
+-);
++export function Button({
++  variant = 'primary',
++  size = 'md',
++  loading,
++  disabled,
++  children,
++  className,
++  ...props
++}: ButtonProps) {
++  return (
++    <button
++      {...props}
++      disabled={disabled || loading}
++      className={clsx(
++        'inline-flex items-center justify-center font-medium transition-colors focus-ring',
++        'disabled:cursor-not-allowed',
++        variantClasses[variant],
++        sizeClasses[size],
++        className
++      )}
++    >
++      {loading && <Spinner size="sm" className="opacity-70" />}
++      {children}
++    </button>
++  );
++}
+diff --git a/src/components/ui/Modal.tsx b/src/components/ui/Modal.tsx
+index dec54be..31cd009 100644
+--- a/src/components/ui/Modal.tsx
++++ b/src/components/ui/Modal.tsx
+@@ -9,31 +9,19 @@ export interface ModalProps {
+   title?: string;
+   children: ReactNode;
+   footer?: ReactNode;
+-  size?: 'sm' | 'md' | 'lg' | 'xl';
+-  className?: string;
++  size?: 'sm' | 'md' | 'lg';
+ }
+ 
+-const sizeMap: Record<NonNullable<ModalProps['size']>, string> = {
++const sizeMap = {
+   sm: 'max-w-sm',
+-  md: 'max-w-lg',
++  md: 'max-w-md',
+   lg: 'max-w-2xl',
+-  xl: 'max-w-4xl',
+ };
+ 
+-export function Modal({
+-  open,
+-  onClose,
+-  title,
+-  children,
+-  footer,
+-  size = 'md',
+-  className,
+-}: ModalProps) {
++export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
+   useEffect(() => {
+     if (!open) return;
+-    const onKey = (e: KeyboardEvent) => {
+-      if (e.key === 'Escape') onClose();
+-    };
++    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+     document.addEventListener('keydown', onKey);
+     const prev = document.body.style.overflow;
+     document.body.style.overflow = 'hidden';
+@@ -46,40 +34,40 @@ export function Modal({
+   if (!open) return null;
+ 
+   return (
+-    <div
+-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+-      role="dialog"
+-      aria-modal="true"
+-      aria-label={title}
+-    >
++    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={title}>
++      {/* Backdrop */}
+       <div
+         className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
+         onClick={onClose}
+         aria-hidden
+       />
++
++      {/* Panel */}
+       <div
+         className={clsx(
+-          'relative z-10 flex max-h-[90vh] w-full flex-col rounded-lg bg-surface shadow-modal',
+-          sizeMap[size],
+-          className
++          'relative z-10 flex w-full flex-col overflow-hidden rounded-xl bg-surface shadow-modal',
++          'max-h-[90vh]',
++          sizeMap[size]
+         )}
+       >
+         {title && (
+-          <div className="flex items-center justify-between border-b border-border-subtle px-5 py-3">
++          <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
+             <h2 className="text-base font-semibold text-text-primary">{title}</h2>
+             <button
+               type="button"
+               onClick={onClose}
+-              className="rounded p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
++              className="rounded-lg p-1.5 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
+               aria-label="Close"
+             >
+-              ✕
++              <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
++                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
++              </svg>
+             </button>
+           </div>
+         )}
+-        <div className="overflow-y-auto p-5">{children}</div>
++        <div className="flex-1 overflow-y-auto p-5">{children}</div>
+         {footer && (
+-          <div className="flex justify-end gap-2 border-t border-border-subtle px-5 py-3">
++          <div className="flex justify-end gap-2 border-t border-border-subtle bg-surface-alt px-5 py-3">
+             {footer}
+           </div>
+         )}
+diff --git a/tailwind.config.ts b/tailwind.config.ts
+index b8f8c0a..0ffa437 100644
+--- a/tailwind.config.ts
++++ b/tailwind.config.ts
+@@ -28,6 +28,8 @@ const config: Config = {
+         'state-warning-bg': '#fffbeb',
+         'flag-active': '#dc2626',
+         highlight: '#fef08a',
++        'border-focus': '#0b5fff',
++        'accent-hover': '#0a4fd6',
+       },
+       fontFamily: {
+         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+@@ -52,6 +54,8 @@ const config: Config = {
+         sm: '4px',
+         md: '8px',
+         lg: '12px',
++        xl: '16px',
++        '2xl': '20px',
+       },
+     },
+   },
+-- 
+2.43.0
+

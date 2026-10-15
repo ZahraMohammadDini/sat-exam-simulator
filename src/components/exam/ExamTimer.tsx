@@ -53,24 +53,35 @@ export function ExamTimer({ secondsRemaining, onTick, onExpire, className }: Exa
     return () => clearInterval(id);
   }, []);
 
-  const tone =
-    seconds <= 60
-      ? 'text-state-danger'
-      : seconds <= 300
-      ? 'text-state-warning'
-      : 'text-text-primary';
+  const isWarning = seconds <= 300 && seconds > 60;
+  const isDanger  = seconds <= 60;
 
   return (
     <div
       className={clsx(
-        'flex items-center gap-2 rounded-md bg-surface px-3 py-1.5',
-        'font-timer text-base font-medium',
-        tone,
+        'flex items-center gap-2 rounded-md px-3 py-1.5',
+        'font-timer text-sm font-semibold tabular-nums transition-colors',
+        isDanger
+          ? 'bg-state-danger-bg text-state-danger ring-1 ring-state-danger/20'
+          : isWarning
+          ? 'bg-state-warning-bg text-state-warning ring-1 ring-state-warning/20'
+          : 'bg-surface-alt text-text-primary',
         className
       )}
       aria-live="polite"
     >
-      <span aria-hidden className="text-sm opacity-60">⏱</span>
+      {/* Clock icon */}
+      <svg
+        aria-hidden
+        className={clsx('h-3.5 w-3.5 flex-none', isDanger && 'animate-pulse')}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path strokeLinecap="round" d="M12 7v5l3 3" />
+      </svg>
       <span aria-label="Time remaining">{formatTime(seconds)}</span>
     </div>
   );

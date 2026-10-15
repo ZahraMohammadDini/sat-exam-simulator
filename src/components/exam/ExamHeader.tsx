@@ -28,9 +28,10 @@ export function ExamHeader({
   onOpenNavigator,
 }: ExamHeaderProps) {
   return (
-    <header className="sticky top-0 z-10 border-b border-border-subtle bg-surface-alt">
+    <header className="sticky top-0 z-10 border-b border-border-subtle bg-surface shadow-card">
       <div className="mx-auto grid h-14 max-w-7xl grid-cols-3 items-center px-4 lg:px-6">
-        {/* Left: section title + flag */}
+
+        {/* LEFT: module title + flag */}
         <div className="flex min-w-0 items-center gap-3">
           <span className="truncate text-sm font-semibold text-text-primary">
             {moduleTitle}
@@ -38,35 +39,43 @@ export function ExamHeader({
           <FlagButton flagged={flagged} onToggle={onToggleFlag} />
         </div>
 
-        {/* Center: timer */}
+        {/* CENTER: timer */}
         <div className="flex justify-center">
           <ExamTimer secondsRemaining={secondsRemaining} onExpire={onExpire} />
         </div>
 
-        {/* Right: tools */}
+        {/* RIGHT: tools */}
         <div className="flex items-center justify-end gap-2">
           {showCalculator && (
             <button
               type="button"
               onClick={onToggleCalculator}
               className={clsx(
-                'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors focus-ring',
+                'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-ring',
                 calculatorOpen
-                  ? 'border-accent bg-accent-subtle text-accent'
+                  ? 'border-accent/30 bg-accent-subtle text-accent'
                   : 'border-border-default bg-surface text-text-secondary hover:bg-surface-hover hover:text-text-primary'
               )}
             >
-              <span aria-hidden className="text-sm leading-none">📐</span>
+              {/* Calculator icon */}
+              <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <rect x="4" y="2" width="16" height="20" rx="2" />
+                <path strokeLinecap="round" d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2" />
+              </svg>
               <span className="hidden sm:inline">Calculator</span>
             </button>
           )}
 
+          {/* Navigator button — mobile only */}
           <button
             type="button"
             onClick={onOpenNavigator}
-            className="rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-ring lg:hidden"
+            className="inline-flex items-center gap-2 rounded-md border border-border-default bg-surface px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-ring lg:hidden"
           >
-            Questions
+            <svg aria-hidden className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span className="hidden sm:inline">Questions</span>
           </button>
         </div>
       </div>

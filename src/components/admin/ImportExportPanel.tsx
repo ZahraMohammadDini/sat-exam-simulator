@@ -97,10 +97,10 @@ export function ImportExportPanel({ tests }: ImportExportPanelProps) {
   return (
     <div className="space-y-6">
       {/* Export */}
-      <section className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
+      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
         <div>
           <h2 className="text-base font-semibold">Export a test</h2>
-          <p className="mt-1 text-xs text-bluebook-muted">
+          <p className="mt-1 text-xs text-text-muted">
             Downloads a JSON file with the test structure and all question content.
           </p>
         </div>
@@ -108,13 +108,13 @@ export function ImportExportPanel({ tests }: ImportExportPanelProps) {
         {exportError && <Alert tone="error">{exportError}</Alert>}
 
         {tests.length === 0 ? (
-          <p className="text-sm text-bluebook-muted">No tests to export yet.</p>
+          <p className="text-sm text-text-muted">No tests to export yet.</p>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={exportId}
               onChange={(e) => setExportId(e.target.value)}
-              className="h-10 flex-1 rounded-md border border-bluebook-border px-3 text-sm"
+              className="h-10 flex-1 rounded-md border border-border-default px-3 text-sm"
             >
               {tests.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -131,10 +131,10 @@ export function ImportExportPanel({ tests }: ImportExportPanelProps) {
       </section>
 
       {/* Import */}
-      <section className="space-y-4 rounded-lg border border-bluebook-border bg-white p-6 shadow-card">
+      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
         <div>
           <h2 className="text-base font-semibold">Import a test</h2>
-          <p className="mt-1 text-xs text-bluebook-muted">
+          <p className="mt-1 text-xs text-text-muted">
             Uploads a JSON file from a previous export. A new test will be created;
             existing tests are not affected.
           </p>
@@ -146,14 +146,14 @@ export function ImportExportPanel({ tests }: ImportExportPanelProps) {
         <label className="block space-y-1 text-xs">
           <span className="font-medium">
             Password for the imported test{' '}
-            <span className="text-bluebook-muted">(students will use this)</span>
+            <span className="text-text-muted">(students will use this)</span>
           </span>
           <input
             type="text"
             value={importPassword}
             onChange={(e) => setImportPassword(e.target.value)}
             placeholder="e.g. demo1234"
-            className="h-10 w-full max-w-xs rounded-md border border-bluebook-border px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-bluebook-accent"
+            className="h-10 w-full max-w-xs rounded-md border border-border-default px-3 font-mono text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </label>
 

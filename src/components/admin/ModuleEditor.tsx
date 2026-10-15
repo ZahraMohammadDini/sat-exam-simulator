@@ -87,13 +87,13 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
   const subjectLabel = subject === 'math' ? 'Math' : 'Reading & Writing';
 
   return (
-    <div className="rounded-lg border border-bluebook-border bg-white shadow-card">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-bluebook-border px-4 py-3">
+    <div className="rounded-lg border border-border-default bg-surface shadow-card">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border-default px-4 py-3">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
-            className="rounded p-1 text-bluebook-muted hover:bg-bluebook-bg"
+            className="rounded p-1 text-text-muted hover:bg-surface-alt"
             aria-label={collapsed ? 'Expand' : 'Collapse'}
           >
             {collapsed ? '▸' : '▾'}
@@ -102,7 +102,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
             <div className="text-sm font-semibold">
               {subjectLabel} — Module {module.moduleNumber}
             </div>
-            <div className="mt-0.5 flex items-center gap-2 text-xs text-bluebook-muted">
+            <div className="mt-0.5 flex items-center gap-2 text-xs text-text-muted">
               <Badge tone="neutral">{difficulty}</Badge>
               <span>
                 {module.questions.length} question
@@ -137,7 +137,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               >
                 <option value="math">Math</option>
                 <option value="reading_writing">Reading &amp; Writing</option>
@@ -148,7 +148,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value)}
-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               >
                 <option value="standard">standard</option>
                 <option value="easy">easy</option>
@@ -163,7 +163,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
                 max={120}
                 value={minutes}
                 onChange={(e) => setMinutes(Number(e.target.value))}
-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </label>
             <label className="space-y-1 text-xs">
@@ -174,7 +174,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
                 value={adaptiveThreshold}
                 onChange={(e) => setAdaptiveThreshold(e.target.value)}
                 placeholder="—"
-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </label>
           </div>
@@ -185,7 +185,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
               <select
                 value={routesTo}
                 onChange={(e) => setRoutesTo(e.target.value)}
-                className="h-9 w-full rounded-md border border-bluebook-border px-2 text-sm"
+                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               >
                 <option value="">—</option>
                 <option value="easy">easy</option>
@@ -200,11 +200,11 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
           </div>
 
           <div>
-            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-bluebook-muted">
+            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-text-muted">
               Questions
             </div>
             {module.questions.length === 0 ? (
-              <div className="rounded-md border border-dashed border-bluebook-border p-6 text-center text-xs text-bluebook-muted">
+              <div className="rounded-md border border-dashed border-border-default p-6 text-center text-xs text-text-muted">
                 No questions yet. Click <strong>+ Add questions</strong> above.
               </div>
             ) : (
