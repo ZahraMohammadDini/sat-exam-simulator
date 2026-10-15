@@ -16,8 +16,7 @@ export function StudentNav({ name }: StudentNavProps) {
     setBusy(true);
     try {
       await adminPost('/api/student/auth/logout');
-      router.push('/student');
-      router.refresh();
+      window.location.href = '/student';
     } catch {
       setBusy(false);
     }
