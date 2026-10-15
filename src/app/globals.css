@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
@@ -7,21 +7,16 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
   --app-bg: #f0f1f3;
   --surface: #ffffff;
-  --surface-alt: #f7f8f9;
   --border: #d4d6da;
   --text-primary: #1a1d21;
   --accent: #0b5fff;
-  --danger: #b91c1c;
 }
 
 html,
 body {
-  min-height: 100%;
-  width: 100%;
-  margin: 0;
+  height: 100%;
   background: var(--app-bg);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -59,22 +54,22 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Copy prevention — best-effort.
-   Note: passage-text is intentionally EXCLUDED so the highlighter can work. */
-.question-stem,
-.choice-text {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-.no-select {
-  user-select: none;
-}
+/*
+ * COPY PREVENTION
+ * ===============
+ * We intentionally DO NOT use `user-select: none` anymore.
+ * Blocking selection also blocks the highlighter (which reads
+ * window.getSelection()) and prevents students from highlighting
+ * or annotating the passage.
+ *
+ * Instead, actual copy/cut/paste/context-menu actions are blocked
+ * at the event level in src/lib/copy-prevention.ts. Students can
+ * select text visually and use the highlighter, but Ctrl+C, Cmd+C,
+ * right-click → Copy, and cut are all prevented.
+ */
 
 /* Custom highlight mark */
-mark.bb-highlight {
+mark[data-highlight-id] {
   background: #fef08a;
   padding: 0;
   border-radius: 2px;
@@ -96,102 +91,4 @@ mark.bb-highlight {
 .focus-ring:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
-}
-
-/* ─── Image frame: consistent framing for all exam images ──────────────────── */
-/* Stem / passage images */
-.img-frame {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  max-height: 68vh;
-  height: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #f7f8f9;
-  object-fit: contain;
-  object-position: center;
-  overflow: hidden;
-}
-
-/* Choice images — fixed height so answer rows stay even */
-.img-frame-choice {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  max-height: 112px;
-  height: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #f7f8f9;
-  object-fit: contain;
-}
-
-/* Review / explanation images */
-.img-frame-review {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  max-height: 240px;
-  height: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #f7f8f9;
-  object-fit: contain;
-}
-
-/* Passage image — full width, taller allowance */
-.img-frame-passage {
-  display: block;
-  width: 100%;
-  max-height: 72vh;
-  height: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #f7f8f9;
-  object-fit: contain;
-  object-position: center;
-}
-
-/* Admin previews use the same neutral frame without cropping source content. */
-.img-frame-admin {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  max-height: 280px;
-  height: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f7f8f9;
-  object-fit: contain;
-  object-position: center;
-}
-
-/* Keyboard focus should remain visible on interactive controls. */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* Avoid accidental viewport-wide horizontal scrolling on narrow devices. */
-body {
-  overflow-wrap: anywhere;
-}
-
-@media (max-width: 639px) {
-  .passage-text {
-    font-size: 15px;
-    line-height: 1.6;
-  }
-}
-
-/* Smooth page transitions */
-@media (prefers-reduced-motion: no-preference) {
-  .transition-page {
-    transition: opacity 0.15s ease;
-  }
 }

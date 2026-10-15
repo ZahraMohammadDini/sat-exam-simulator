@@ -1,8 +1,14 @@
 // ─────────────────────────────────────────────────────────────────
 // Best-effort copy prevention — client-side only.
 //
-// This is *not* bulletproof. Screenshots and devtools bypass it.
-// It deters casual copying during an exam.
+// Design intent:
+//   • Students CAN select text visually (needed for the highlighter)
+//   • Students CANNOT copy / cut / drag text out
+//   • Right-click is disabled on non-input elements
+//
+// This is *not* bulletproof. Screenshots, devtools, and browser menus
+// bypass it. It exists to deter casual copying, not to prevent
+// determined extraction.
 // ─────────────────────────────────────────────────────────────────
 
 let installed = false;
@@ -16,10 +22,10 @@ function onCut(e: ClipboardEvent) {
 }
 
 function onContextMenu(e: MouseEvent) {
-  // Allow context menu inside input/textarea (admins may need paste)
   const target = e.target as HTMLElement | null;
   if (target) {
     const tag = target.tagName;
+    // Allow context menu inside input/textarea so paste still works
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     if (target.isContentEditable) return;
   }
@@ -33,6 +39,18 @@ function onDragStart(e: DragEvent) {
   }
 }
 
+/**
+ * Block dropping text into the page from outside.
+ * (Prevents a student from pasting in answers from an external doc.)
+ */
+function onDrop(e: DragEvent) {
+  const target = e.target as HTMLElement | null;
+  if (!target) return;
+  const tag = target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) return;
+  e.preventDefault();
+}
+
 export function installCopyPrevention(): () => void {
   if (typeof window === 'undefined') return () => {};
   if (installed) return () => {};
@@ -41,6 +59,7 @@ export function installCopyPrevention(): () => void {
   document.addEventListener('cut', onCut);
   document.addEventListener('contextmenu', onContextMenu);
   document.addEventListener('dragstart', onDragStart);
+  document.addEventListener('drop', onDrop);
 
   installed = true;
 
@@ -49,14 +68,12 @@ export function installCopyPrevention(): () => void {
     document.removeEventListener('cut', onCut);
     document.removeEventListener('contextmenu', onContextMenu);
     document.removeEventListener('dragstart', onDragStart);
+    document.removeEventListener('drop', onDrop);
     installed = false;
   };
 }
 
 // ── Custom highlight storage (avoid clipboard) ───────────────────
-// Instead of relying on native selection, the exam stores highlight
-// ranges in React state and renders <mark> spans. Nothing touches
-// the system clipboard.
 
 export interface HighlightRange {
   id: string;
