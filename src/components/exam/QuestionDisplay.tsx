@@ -26,7 +26,7 @@ export function QuestionDisplay({
   return (
     <div className="flex flex-col gap-8 lg:flex-row">
       {/* Passage — left panel (if present) */}
-      {question.passage && (
+      {(question.passage || (question.passageIsImage && question.passageImage)) && (
         <div className="lg:w-[48%] lg:flex-shrink-0">
           <PassagePanel question={question} />
         </div>

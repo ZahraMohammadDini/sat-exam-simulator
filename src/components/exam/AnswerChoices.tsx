@@ -30,7 +30,7 @@ export function AnswerChoices({
           <li key={choice.id}>
             <div
               className={clsx(
-                'group flex items-center gap-3 rounded-md border transition-all',
+                'group flex min-w-0 items-center gap-2 rounded-lg border transition-colors focus-within:ring-2 focus-within:ring-accent/25',
                 isSelected
                   ? 'border-accent bg-surface-selected shadow-sm'
                   : 'border-border-default bg-surface hover:border-border-default hover:bg-surface-hover',
@@ -41,7 +41,7 @@ export function AnswerChoices({
               <button
                 type="button"
                 onClick={() => !disabled && !isStruck && onSelect(choice.id)}
-                className="flex flex-1 items-center gap-3 p-3.5 text-left focus:outline-none"
+                className="flex min-w-0 flex-1 items-center gap-3 p-3 text-left focus:outline-none sm:p-3.5"
                 aria-pressed={isSelected}
                 disabled={disabled}
               >
@@ -60,7 +60,7 @@ export function AnswerChoices({
                 {/* Choice content */}
                 <div
                   className={clsx(
-                    'choice-text flex-1 leading-snug',
+                    'choice-text min-w-0 flex-1 leading-snug',
                     isStruck && 'line-through'
                   )}
                 >
@@ -84,9 +84,9 @@ export function AnswerChoices({
                   type="button"
                   onClick={() => onToggleStrikethrough(choice.id)}
                   className={clsx(
-                    'mr-3 rounded px-2 py-1 text-xs font-medium transition-all',
-                    'text-text-muted hover:bg-surface-hover hover:text-text-primary',
-                    isStruck ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+                    'mr-2 min-h-8 min-w-8 rounded px-2 py-1 text-xs font-medium transition-opacity sm:mr-3',
+                    'text-text-muted hover:bg-surface-hover hover:text-text-primary focus-visible:opacity-100',
+                    isStruck ? 'opacity-100' : 'opacity-60 sm:opacity-0 sm:group-hover:opacity-60'
                   )}
                   aria-label={isStruck ? 'Remove strikethrough' : 'Eliminate this choice'}
                   title="Eliminate answer choice"

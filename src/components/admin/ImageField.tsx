@@ -140,7 +140,7 @@ export function ImageField({
               <img
                 src={value.imageUrl}
                 alt={label}
-                className="mx-auto max-h-56 rounded-lg border border-border-default bg-surface object-contain"
+                className="img-frame-admin mx-auto"
               />
               <div className="flex justify-center gap-2">
                 <Button type="button" size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>

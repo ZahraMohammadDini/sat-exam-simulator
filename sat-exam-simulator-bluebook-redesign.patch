@@ -1,0 +1,229 @@
+--- a/src/components/exam/AnswerChoices.tsx
++++ b/src/components/exam/AnswerChoices.tsx
+@@ -30,7 +30,7 @@
+           <li key={choice.id}>
+             <div
+               className={clsx(
+-                'group flex items-center gap-3 rounded-md border transition-all',
++                'group flex min-w-0 items-center gap-2 rounded-lg border transition-colors focus-within:ring-2 focus-within:ring-accent/25',
+                 isSelected
+                   ? 'border-accent bg-surface-selected shadow-sm'
+                   : 'border-border-default bg-surface hover:border-border-default hover:bg-surface-hover',
+@@ -41,7 +41,7 @@
+               <button
+                 type="button"
+                 onClick={() => !disabled && !isStruck && onSelect(choice.id)}
+-                className="flex flex-1 items-center gap-3 p-3.5 text-left focus:outline-none"
++                className="flex min-w-0 flex-1 items-center gap-3 p-3 text-left focus:outline-none sm:p-3.5"
+                 aria-pressed={isSelected}
+                 disabled={disabled}
+               >
+@@ -60,7 +60,7 @@
+                 {/* Choice content */}
+                 <div
+                   className={clsx(
+-                    'choice-text flex-1 leading-snug',
++                    'choice-text min-w-0 flex-1 leading-snug',
+                     isStruck && 'line-through'
+                   )}
+                 >
+@@ -84,9 +84,9 @@
+                   type="button"
+                   onClick={() => onToggleStrikethrough(choice.id)}
+                   className={clsx(
+-                    'mr-3 rounded px-2 py-1 text-xs font-medium transition-all',
+-                    'text-text-muted hover:bg-surface-hover hover:text-text-primary',
+-                    isStruck ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
++                    'mr-2 min-h-8 min-w-8 rounded px-2 py-1 text-xs font-medium transition-opacity sm:mr-3',
++                    'text-text-muted hover:bg-surface-hover hover:text-text-primary focus-visible:opacity-100',
++                    isStruck ? 'opacity-100' : 'opacity-60 sm:opacity-0 sm:group-hover:opacity-60'
+                   )}
+                   aria-label={isStruck ? 'Remove strikethrough' : 'Eliminate this choice'}
+                   title="Eliminate answer choice"
+--- a/src/components/exam/QuestionDisplay.tsx
++++ b/src/components/exam/QuestionDisplay.tsx
+@@ -26,7 +26,7 @@
+   return (
+     <div className="flex flex-col gap-8 lg:flex-row">
+       {/* Passage — left panel (if present) */}
+-      {question.passage && (
++      {(question.passage || (question.passageIsImage && question.passageImage)) && (
+         <div className="lg:w-[48%] lg:flex-shrink-0">
+           <PassagePanel question={question} />
+         </div>
+--- a/src/components/admin/ImageField.tsx
++++ b/src/components/admin/ImageField.tsx
+@@ -140,7 +140,7 @@
+               <img
+                 src={value.imageUrl}
+                 alt={label}
+-                className="mx-auto max-h-56 rounded-lg border border-border-default bg-surface object-contain"
++                className="img-frame-admin mx-auto"
+               />
+               <div className="flex justify-center gap-2">
+                 <Button type="button" size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+--- a/src/components/admin/QuestionEditor.tsx
++++ b/src/components/admin/QuestionEditor.tsx
+@@ -537,7 +537,7 @@
+           <img
+             src={value}
+             alt="Choice"
+-            className="max-h-32 rounded border border-border-default"
++            className="img-frame-admin"
+           />
+           <div className="flex gap-2">
+             <button
+@@ -609,7 +609,7 @@
+           <img
+             src={passage.imageUrl}
+             alt="Passage"
+-            className="mb-4 w-full rounded border border-border-default bg-surface"
++            className="img-frame-passage mb-4"
+           />
+         )}
+         {!passage.isImage && passage.text && (
+@@ -621,7 +621,7 @@
+           <img
+             src={stem.imageUrl}
+             alt="Stem"
+-            className="mb-4 max-h-64 rounded border border-border-default bg-surface"
++            className="img-frame-admin mb-4"
+           />
+         ) : (
+           <KatexRenderer text={stem.text} className="mb-4 text-base" />
+@@ -649,7 +649,7 @@
+                   <img
+                     src={c.imageUrl}
+                     alt={`Choice ${c.id}`}
+-                    className="max-h-24 rounded"
++                    className="img-frame-choice"
+                   />
+                 ) : (
+                   <span className="text-xs text-text-muted">
+@@ -680,7 +680,7 @@
+               <img
+                 src={explanation.imageUrl}
+                 alt="Explanation"
+-                className="max-w-full rounded border border-border-default"
++                className="img-frame-review"
+               />
+             ) : (
+               <KatexRenderer text={explanation.text} className="text-sm" />
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -7,16 +7,21 @@
+ @tailwind utilities;
+ 
+ :root {
++  color-scheme: light;
+   --app-bg: #f0f1f3;
+   --surface: #ffffff;
++  --surface-alt: #f7f8f9;
+   --border: #d4d6da;
+   --text-primary: #1a1d21;
+   --accent: #0b5fff;
++  --danger: #b91c1c;
+ }
+ 
+ html,
+ body {
+-  height: 100%;
++  min-height: 100%;
++  width: 100%;
++  margin: 0;
+   background: var(--app-bg);
+   color: var(--text-primary);
+   -webkit-font-smoothing: antialiased;
+@@ -97,21 +102,26 @@
+ /* Stem / passage images */
+ .img-frame {
+   display: block;
++  width: auto;
+   max-width: 100%;
++  max-height: 68vh;
+   height: auto;
+   border-radius: 8px;
+   border: 1px solid #e5e7eb;
+   background: #f7f8f9;
+   object-fit: contain;
++  object-position: center;
++  overflow: hidden;
+ }
+ 
+ /* Choice images — fixed height so answer rows stay even */
+ .img-frame-choice {
+   display: block;
++  width: auto;
+   max-width: 100%;
+-  max-height: 96px;
++  max-height: 112px;
+   height: auto;
+-  border-radius: 6px;
++  border-radius: 8px;
+   border: 1px solid #e5e7eb;
+   background: #f7f8f9;
+   object-fit: contain;
+@@ -120,10 +130,11 @@
+ /* Review / explanation images */
+ .img-frame-review {
+   display: block;
++  width: auto;
+   max-width: 100%;
+-  max-height: 160px;
++  max-height: 240px;
+   height: auto;
+-  border-radius: 6px;
++  border-radius: 8px;
+   border: 1px solid #e5e7eb;
+   background: #f7f8f9;
+   object-fit: contain;
+@@ -133,11 +144,49 @@
+ .img-frame-passage {
+   display: block;
+   width: 100%;
++  max-height: 72vh;
+   height: auto;
+   border-radius: 8px;
+   border: 1px solid #e5e7eb;
+   background: #f7f8f9;
+   object-fit: contain;
++  object-position: center;
++}
++
++/* Admin previews use the same neutral frame without cropping source content. */
++.img-frame-admin {
++  display: block;
++  width: auto;
++  max-width: 100%;
++  max-height: 280px;
++  height: auto;
++  border: 1px solid #e5e7eb;
++  border-radius: 8px;
++  background: #f7f8f9;
++  object-fit: contain;
++  object-position: center;
++}
++
++/* Keyboard focus should remain visible on interactive controls. */
++button:focus-visible,
++a:focus-visible,
++input:focus-visible,
++select:focus-visible,
++textarea:focus-visible {
++  outline: 2px solid var(--accent);
++  outline-offset: 2px;
++}
++
++/* Avoid accidental viewport-wide horizontal scrolling on narrow devices. */
++body {
++  overflow-wrap: anywhere;
++}
++
++@media (max-width: 639px) {
++  .passage-text {
++    font-size: 15px;
++    line-height: 1.6;
++  }
+ }
+ 
+ /* Smooth page transitions */

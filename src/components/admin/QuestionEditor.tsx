@@ -537,7 +537,7 @@ function MiniImageField({
           <img
             src={value}
             alt="Choice"
-            className="max-h-32 rounded border border-border-default"
+            className="img-frame-admin"
           />
           <div className="flex gap-2">
             <button
@@ -609,7 +609,7 @@ function QuestionPreview({
           <img
             src={passage.imageUrl}
             alt="Passage"
-            className="mb-4 w-full rounded border border-border-default bg-surface"
+            className="img-frame-passage mb-4"
           />
         )}
         {!passage.isImage && passage.text && (
@@ -621,7 +621,7 @@ function QuestionPreview({
           <img
             src={stem.imageUrl}
             alt="Stem"
-            className="mb-4 max-h-64 rounded border border-border-default bg-surface"
+            className="img-frame-admin mb-4"
           />
         ) : (
           <KatexRenderer text={stem.text} className="mb-4 text-base" />
@@ -649,7 +649,7 @@ function QuestionPreview({
                   <img
                     src={c.imageUrl}
                     alt={`Choice ${c.id}`}
-                    className="max-h-24 rounded"
+                    className="img-frame-choice"
                   />
                 ) : (
                   <span className="text-xs text-text-muted">
@@ -680,7 +680,7 @@ function QuestionPreview({
               <img
                 src={explanation.imageUrl}
                 alt="Explanation"
-                className="max-w-full rounded border border-border-default"
+                className="img-frame-review"
               />
             ) : (
               <KatexRenderer text={explanation.text} className="text-sm" />

@@ -7,16 +7,21 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   --app-bg: #f0f1f3;
   --surface: #ffffff;
+  --surface-alt: #f7f8f9;
   --border: #d4d6da;
   --text-primary: #1a1d21;
   --accent: #0b5fff;
+  --danger: #b91c1c;
 }
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
   background: var(--app-bg);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -97,21 +102,26 @@ mark.bb-highlight {
 /* Stem / passage images */
 .img-frame {
   display: block;
+  width: auto;
   max-width: 100%;
+  max-height: 68vh;
   height: auto;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #f7f8f9;
   object-fit: contain;
+  object-position: center;
+  overflow: hidden;
 }
 
 /* Choice images — fixed height so answer rows stay even */
 .img-frame-choice {
   display: block;
+  width: auto;
   max-width: 100%;
-  max-height: 96px;
+  max-height: 112px;
   height: auto;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #f7f8f9;
   object-fit: contain;
@@ -120,10 +130,11 @@ mark.bb-highlight {
 /* Review / explanation images */
 .img-frame-review {
   display: block;
+  width: auto;
   max-width: 100%;
-  max-height: 160px;
+  max-height: 240px;
   height: auto;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #f7f8f9;
   object-fit: contain;
@@ -133,11 +144,49 @@ mark.bb-highlight {
 .img-frame-passage {
   display: block;
   width: 100%;
+  max-height: 72vh;
   height: auto;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #f7f8f9;
   object-fit: contain;
+  object-position: center;
+}
+
+/* Admin previews use the same neutral frame without cropping source content. */
+.img-frame-admin {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 280px;
+  height: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f7f8f9;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Keyboard focus should remain visible on interactive controls. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Avoid accidental viewport-wide horizontal scrolling on narrow devices. */
+body {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .passage-text {
+    font-size: 15px;
+    line-height: 1.6;
+  }
 }
 
 /* Smooth page transitions */
