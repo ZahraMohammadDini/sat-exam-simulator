@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { adminPut, adminDelete } from '@/lib/admin-client';
@@ -52,6 +52,24 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
   const [saving, setSaving] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  // Keep local form state in sync if the parent re-fetches with new values
+  useEffect(() => {
+    setSubject(module.subject);
+  }, [module.subject]);
+  useEffect(() => {
+    setDifficulty(module.difficulty);
+  }, [module.difficulty]);
+  useEffect(() => {
+    setMinutes(Math.round(module.timeLimitSeconds / 60));
+  }, [module.timeLimitSeconds]);
+  useEffect(() => {
+    setBreakMinutes(
+      module.breakAfterSeconds != null
+        ? Math.round(module.breakAfterSeconds / 60)
+        : 0
+    );
+  }, [module.breakAfterSeconds]);
 
   const save = async () => {
     setSaving(true);
