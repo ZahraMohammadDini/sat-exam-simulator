@@ -48,12 +48,14 @@ export default async function EditTestPage({ params }: PageProps) {
     allowReview: test.allowReview,
     showExplanations: test.showExplanations,
     adaptiveEnabled: test.adaptiveEnabled,
+    referenceSheetImage: test.referenceSheetImage,
     modules: test.modules.map((m) => ({
       id: m.id,
       subject: m.subject,
       moduleNumber: m.moduleNumber,
       difficulty: m.difficulty,
       timeLimitSeconds: m.timeLimitSeconds,
+      breakAfterSeconds: m.breakAfterSeconds,
       order: m.order,
       adaptiveThreshold: m.adaptiveThreshold,
       routesTo: m.routesTo,
@@ -68,7 +70,7 @@ export default async function EditTestPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold">Edit test</h1>
+        <h1 className="text-2xl font-bold text-text-primary">Edit test</h1>
         <p className="mt-1 text-sm text-text-muted">{test.title}</p>
       </header>
       <TestEditor test={serialized} />

@@ -45,8 +45,9 @@ model Test {
   isPublished      Boolean       @default(false)
   allowReview      Boolean       @default(true)
   showExplanations Boolean       @default(true)
-  adaptiveEnabled  Boolean       @default(false)
-  modules          TestModule[]
+  adaptiveEnabled    Boolean       @default(false)
+  referenceSheetImage String?
+  modules            TestModule[]
   sessions         TestSession[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
@@ -140,6 +141,7 @@ model TestSession {
   answers            Json      @default("{}")
   timeRemaining      Json      @default("{}")
   routing            Json      @default("[]")
+  highlights         Json      @default("{}")
   results            Json?
   status             String    @default("active")
   isPreview          Boolean   @default(false)

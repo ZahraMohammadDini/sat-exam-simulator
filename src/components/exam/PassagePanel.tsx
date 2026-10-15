@@ -10,6 +10,7 @@ import {
   type Highlight,
 } from '@/lib/highlight-store';
 import { HighlightToolbar } from './HighlightToolbar';
+import { ZoomableImage } from './ZoomableImage';
 
 export interface PassagePanelProps {
   question: PublicQuestion;
@@ -29,11 +30,9 @@ export function PassagePanel({
     setLocalHighlights(highlights);
   }, [highlights]);
 
-  // Re-apply highlights after content renders
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    // Remove any existing marks
     container.querySelectorAll('mark[data-highlight-id]').forEach((el) => {
       const parent = el.parentNode;
       if (parent) {
@@ -41,7 +40,6 @@ export function PassagePanel({
         parent.removeChild(el);
       }
     });
-    // Re-apply
     for (const h of localHighlights) {
       applyHighlightToContainer(container, h);
     }
@@ -75,12 +73,10 @@ export function PassagePanel({
   if (question.passageIsImage && question.passageImage) {
     return (
       <div className="passage-text">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <ZoomableImage
           src={question.passageImage}
           alt="Reading passage"
-          className="w-full rounded-md border border-border-subtle"
-          draggable={false}
+          className="w-full"
         />
       </div>
     );
@@ -92,23 +88,25 @@ export function PassagePanel({
         onHighlight={addHighlight}
         onNote={() => {
           const note = window.prompt('Note:');
-          if (note) {
-            const container = containerRef.current;
-            if (!container) return;
-            const sel = getSelectionOffsets(container);
-            if (!sel) return;
-            const h: Highlight = {
-              id: createHighlightId(),
-              text: sel.text,
-              color: 'yellow',
-              startOffset: sel.start,
-              endOffset: sel.end,
-              note,
-            };
-            const next = [...localHighlights, h];
-            setLocalHighlights(next);
-            onHighlightsChange?.(next);
+          if (!note) {
+            window.getSelection()?.removeAllRanges();
+            return;
           }
+          const container = containerRef.current;
+          if (!container) return;
+          const sel = getSelectionOffsets(container);
+          if (!sel) return;
+          const h: Highlight = {
+            id: createHighlightId(),
+            text: sel.text,
+            color: 'yellow',
+            startOffset: sel.start,
+            endOffset: sel.end,
+            note,
+          };
+          const next = [...localHighlights, h];
+          setLocalHighlights(next);
+          onHighlightsChange?.(next);
           window.getSelection()?.removeAllRanges();
         }}
         onClear={clearHighlights}
@@ -143,7 +141,14 @@ export function PassagePanel({
               <li key={h.id} className="flex items-start gap-2 rounded px-2 py-1">
                 <span
                   className="mt-0.5 inline-block h-3 w-3 flex-shrink-0 rounded-sm"
-                  style={{ backgroundColor: h.color === 'yellow' ? '#fef08a' : h.color === 'blue' ? '#bfdbfe' : '#fbcfe8' }}
+                  style={{
+                    backgroundColor:
+                      h.color === 'yellow'
+                        ? '#fef08a'
+                        : h.color === 'blue'
+                        ? '#bfdbfe'
+                        : '#fbcfe8',
+                  }}
                 />
                 <div>
                   <span>{h.text}</span>

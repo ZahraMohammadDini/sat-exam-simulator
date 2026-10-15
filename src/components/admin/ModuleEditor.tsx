@@ -25,6 +25,7 @@ interface ModuleEditorModule {
   moduleNumber: number;
   difficulty: string;
   timeLimitSeconds: number;
+  breakAfterSeconds: number | null;
   order: number;
   adaptiveThreshold: number | null;
   routesTo: string | null;
@@ -41,6 +42,9 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
   const [subject, setSubject] = useState(module.subject);
   const [difficulty, setDifficulty] = useState(module.difficulty);
   const [minutes, setMinutes] = useState(Math.round(module.timeLimitSeconds / 60));
+  const [breakMinutes, setBreakMinutes] = useState(
+    module.breakAfterSeconds != null ? Math.round(module.breakAfterSeconds / 60) : 0
+  );
   const [adaptiveThreshold, setAdaptiveThreshold] = useState(
     module.adaptiveThreshold ?? ''
   );
@@ -56,6 +60,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
         subject,
         difficulty,
         timeLimitSeconds: Math.max(60, minutes * 60),
+        breakAfterSeconds: breakMinutes > 0 ? breakMinutes * 60 : null,
         adaptiveThreshold:
           adaptiveThreshold === '' ? null : Number(adaptiveThreshold),
         routesTo: routesTo === '' ? null : routesTo,
@@ -87,19 +92,19 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
   const subjectLabel = subject === 'math' ? 'Math' : 'Reading & Writing';
 
   return (
-    <div className="rounded-lg border border-border-default bg-surface shadow-card">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border-default px-4 py-3">
+    <div className="rounded-lg border border-border-subtle bg-surface shadow-card">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle px-4 py-3">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
-            className="rounded p-1 text-text-muted hover:bg-surface-alt"
+            className="rounded p-1 text-text-muted hover:bg-surface-hover"
             aria-label={collapsed ? 'Expand' : 'Collapse'}
           >
             {collapsed ? '▸' : '▾'}
           </button>
           <div>
-            <div className="text-sm font-semibold">
+            <div className="text-sm font-semibold text-text-primary">
               {subjectLabel} — Module {module.moduleNumber}
             </div>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-text-muted">
@@ -108,6 +113,9 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
                 {module.questions.length} question
                 {module.questions.length === 1 ? '' : 's'}
               </span>
+              {breakMinutes > 0 && (
+                <span>· {breakMinutes}m break after</span>
+              )}
             </div>
           </div>
         </div>
@@ -122,7 +130,7 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
           <button
             type="button"
             onClick={remove}
-            className="rounded border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
+            className="rounded border border-state-danger/30 px-3 py-1 text-xs text-state-danger hover:bg-state-danger-bg"
           >
             Delete module
           </button>
@@ -131,24 +139,24 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
 
       {!collapsed && (
         <div className="space-y-4 p-4">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <label className="space-y-1 text-xs">
-              <span className="font-medium">Subject</span>
+              <span className="font-medium text-text-primary">Subject</span>
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="h-9 w-full rounded-md border border-border-default px-2 text-sm"
               >
                 <option value="math">Math</option>
                 <option value="reading_writing">Reading &amp; Writing</option>
               </select>
             </label>
             <label className="space-y-1 text-xs">
-              <span className="font-medium">Difficulty</span>
+              <span className="font-medium text-text-primary">Difficulty</span>
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value)}
-                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="h-9 w-full rounded-md border border-border-default px-2 text-sm"
               >
                 <option value="standard">standard</option>
                 <option value="easy">easy</option>
@@ -156,36 +164,48 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
               </select>
             </label>
             <label className="space-y-1 text-xs">
-              <span className="font-medium">Time (minutes)</span>
+              <span className="font-medium text-text-primary">Time (min)</span>
               <input
                 type="number"
                 min={1}
                 max={120}
                 value={minutes}
                 onChange={(e) => setMinutes(Number(e.target.value))}
-                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="h-9 w-full rounded-md border border-border-default px-2 text-sm"
               />
             </label>
             <label className="space-y-1 text-xs">
-              <span className="font-medium">Adaptive threshold</span>
+              <span className="font-medium text-text-primary">Break after (min)</span>
+              <input
+                type="number"
+                min={0}
+                max={60}
+                value={breakMinutes}
+                onChange={(e) => setBreakMinutes(Number(e.target.value))}
+                placeholder="0"
+                className="h-9 w-full rounded-md border border-border-default px-2 text-sm"
+              />
+            </label>
+            <label className="space-y-1 text-xs">
+              <span className="font-medium text-text-primary">Adaptive threshold</span>
               <input
                 type="number"
                 min={0}
                 value={adaptiveThreshold}
                 onChange={(e) => setAdaptiveThreshold(e.target.value)}
                 placeholder="—"
-                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="h-9 w-full rounded-md border border-border-default px-2 text-sm"
               />
             </label>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="space-y-1 text-xs">
-              <span className="font-medium">Routes to (Module 1 only)</span>
+              <span className="font-medium text-text-primary">Routes to (Module 1 only)</span>
               <select
                 value={routesTo}
                 onChange={(e) => setRoutesTo(e.target.value)}
-                className="h-9 w-full rounded-md border border-border-default bg-surface px-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="h-9 w-full rounded-md border border-border-default px-2 text-sm"
               >
                 <option value="">—</option>
                 <option value="easy">easy</option>
@@ -197,6 +217,11 @@ export function ModuleEditor({ module, onChanged, onError }: ModuleEditorProps) 
                 Save module
               </Button>
             </div>
+          </div>
+
+          <div className="text-xs text-text-muted">
+            <strong>Tip:</strong> set <em>Break after</em> on the last R&amp;W module (e.g. 10)
+            to create the SAT&apos;s section break before the Math section.
           </div>
 
           <div>

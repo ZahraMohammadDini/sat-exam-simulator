@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { adminPut, adminPost, adminDelete } from '@/lib/admin-client';
 import { ModuleEditor } from './ModuleEditor';
+import { ReferenceSheetUploader } from './ReferenceSheetUploader';
 
 interface EditorQuestion {
   id: string;
@@ -26,6 +27,7 @@ interface EditorModule {
   moduleNumber: number;
   difficulty: string;
   timeLimitSeconds: number;
+  breakAfterSeconds: number | null;
   order: number;
   adaptiveThreshold: number | null;
   routesTo: string | null;
@@ -40,6 +42,7 @@ interface EditorTest {
   allowReview: boolean;
   showExplanations: boolean;
   adaptiveEnabled: boolean;
+  referenceSheetImage: string | null;
   modules: EditorModule[];
 }
 
@@ -52,6 +55,9 @@ export function TestEditor({ test }: { test: EditorTest }) {
   const [allowReview, setAllowReview] = useState(test.allowReview);
   const [showExplanations, setShowExplanations] = useState(test.showExplanations);
   const [adaptiveEnabled, setAdaptiveEnabled] = useState(test.adaptiveEnabled);
+  const [referenceSheetImage, setReferenceSheetImage] = useState<string | null>(
+    test.referenceSheetImage
+  );
   const [newPassword, setNewPassword] = useState('');
 
   const [savingSettings, setSavingSettings] = useState(false);
@@ -72,6 +78,7 @@ export function TestEditor({ test }: { test: EditorTest }) {
         allowReview,
         showExplanations,
         adaptiveEnabled,
+        referenceSheetImage,
       };
       if (newPassword) body.password = newPassword;
 
@@ -91,6 +98,7 @@ export function TestEditor({ test }: { test: EditorTest }) {
     setError(null);
     try {
       const moduleNumber = test.modules.length === 0 ? 1 : 2;
+      // Default break: if previous module is R&W and this one is math, 10 min
       await adminPost(`/api/admin/tests/${test.id}/modules`, {
         subject: 'math',
         moduleNumber,
@@ -129,11 +137,11 @@ export function TestEditor({ test }: { test: EditorTest }) {
       {error && <Alert tone="error">{error}</Alert>}
       {message && <Alert tone="success">{message}</Alert>}
 
-      <section className="space-y-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
-        <h2 className="text-base font-semibold">Test settings</h2>
+      <section className="space-y-4 rounded-lg border border-border-subtle bg-surface p-6 shadow-card">
+        <h2 className="text-base font-semibold text-text-primary">Test settings</h2>
 
         <label className="block space-y-1">
-          <span className="text-sm font-medium">Title</span>
+          <span className="text-sm font-medium text-text-primary">Title</span>
           <input
             type="text"
             value={title}
@@ -143,7 +151,7 @@ export function TestEditor({ test }: { test: EditorTest }) {
         </label>
 
         <label className="block space-y-1">
-          <span className="text-sm font-medium">Description</span>
+          <span className="text-sm font-medium text-text-primary">Description</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -153,8 +161,9 @@ export function TestEditor({ test }: { test: EditorTest }) {
         </label>
 
         <label className="block space-y-1">
-          <span className="text-sm font-medium">
-            New password <span className="text-text-muted">(leave blank to keep current)</span>
+          <span className="text-sm font-medium text-text-primary">
+            New password{' '}
+            <span className="text-text-muted">(leave blank to keep current)</span>
           </span>
           <input
             type="text"
@@ -183,6 +192,13 @@ export function TestEditor({ test }: { test: EditorTest }) {
           />
         </div>
 
+        <div className="border-t border-border-subtle pt-4">
+          <ReferenceSheetUploader
+            value={referenceSheetImage}
+            onChange={setReferenceSheetImage}
+          />
+        </div>
+
         <div className="flex justify-end">
           <Button onClick={saveSettings} loading={savingSettings}>
             Save settings
@@ -192,7 +208,7 @@ export function TestEditor({ test }: { test: EditorTest }) {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">
+          <h2 className="text-base font-semibold text-text-primary">
             Modules ({test.modules.length})
           </h2>
           <div className="flex gap-2">
@@ -208,7 +224,7 @@ export function TestEditor({ test }: { test: EditorTest }) {
         </div>
 
         {test.modules.length === 0 ? (
-          <div className="rounded-lg border border-border-default bg-surface p-6 text-center text-sm text-text-muted">
+          <div className="rounded-lg border border-border-subtle bg-surface p-6 text-center text-sm text-text-muted">
             No modules yet. Add one to start building the exam.
           </div>
         ) : (
@@ -225,10 +241,10 @@ export function TestEditor({ test }: { test: EditorTest }) {
         )}
       </section>
 
-      <section className="rounded-lg border border-red-200 bg-surface p-4">
+      <section className="rounded-lg border border-state-danger/20 bg-surface p-4">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-medium">Delete test</div>
+            <div className="text-sm font-medium text-text-primary">Delete test</div>
             <div className="text-xs text-text-muted">
               Permanently removes the test, its modules, and all attempts.
             </div>
@@ -261,12 +277,12 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-sm">
+    <label className="flex cursor-pointer items-center gap-2 text-sm text-text-primary">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent/20"
+        className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent"
       />
       {label}
     </label>

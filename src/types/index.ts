@@ -92,6 +92,7 @@ export interface ModuleStructure {
   moduleNumber: number;
   difficulty: ModuleDifficulty;
   timeLimitSeconds: number;
+  breakAfterSeconds?: number | null;
   order: number;
   questions: PublicQuestion[];
 }

@@ -6,6 +6,7 @@ import { KatexRenderer } from '@/components/ui/KatexRenderer';
 import { AnswerChoices } from './AnswerChoices';
 import { GridInInput } from './GridInInput';
 import { PassagePanel } from './PassagePanel';
+import { ZoomableImage } from './ZoomableImage';
 
 export interface QuestionDisplayProps {
   question: PublicQuestion;
@@ -29,10 +30,9 @@ export function QuestionDisplay({
   disabled,
 }: QuestionDisplayProps) {
   return (
-    <div className="flex flex-col gap-8 lg:flex-row">
-      {/* Passage — left panel (if present) */}
-      {(question.passage || (question.passageIsImage && question.passageImage)) && (
-        <div className="lg:w-[48%] lg:flex-shrink-0">
+    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+      {question.passage && (
+        <div className="lg:w-1/2 lg:flex-shrink-0">
           <PassagePanel
             question={question}
             highlights={highlights}
@@ -40,28 +40,19 @@ export function QuestionDisplay({
           />
         </div>
       )}
-
-      {/* Question side */}
-      <div className="flex flex-1 flex-col gap-6">
-        {/* Stem */}
+      <div className="flex-1 space-y-6">
         <div className="question-stem">
           {question.stemIsImage && question.stemImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <ZoomableImage
               src={question.stemImage}
               alt="Question stem"
-              className="img-frame"
-              draggable={false}
+              className="max-w-full"
             />
           ) : (
             <KatexRenderer text={question.stem} />
           )}
         </div>
 
-        {/* Divider between stem and choices */}
-        <div className="h-px bg-border-subtle" />
-
-        {/* Answer input */}
         {question.type === 'multiple_choice' && question.choices && (
           <AnswerChoices
             choices={question.choices}

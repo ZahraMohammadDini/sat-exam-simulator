@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type {
   TestStructure,
@@ -17,12 +17,15 @@ import { QuestionDisplay } from './QuestionDisplay';
 import { QuestionNavigator } from './QuestionNavigator';
 import { ExamHeader } from './ExamHeader';
 import { DesmosCalculator } from './DesmosCalculator';
+import { MathReferenceSheet } from './MathReferenceSheet';
 import { SectionBreak } from './SectionBreak';
 import { ConfirmSubmitDialog } from './ConfirmSubmitDialog';
 
 export interface ExamShellProps {
   test: TestStructure;
   session: SessionState;
+  initialHighlights?: Record<string, Highlight[]>;
+  referenceSheetImage?: string | null;
 }
 
 interface BreakState {
@@ -52,7 +55,12 @@ async function readJson<T>(res: Response): Promise<T> {
   }
 }
 
-export function ExamShell({ test, session }: ExamShellProps) {
+export function ExamShell({
+  test,
+  session,
+  initialHighlights = {},
+  referenceSheetImage = null,
+}: ExamShellProps) {
   const router = useRouter();
 
   const [currentModuleIndex, setCurrentModuleIndex] = useState(session.currentModuleIndex);
@@ -62,8 +70,10 @@ export function ExamShell({ test, session }: ExamShellProps) {
     session.timeRemaining
   );
   const [strikethrough, setStrikethrough] = useState<Record<string, string[]>>({});
-  const [highlights, setHighlights] = useState<Record<string, Highlight[]>>({});
+  const [highlights, setHighlights] =
+    useState<Record<string, Highlight[]>>(initialHighlights);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [referenceOpen, setReferenceOpen] = useState(false);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -118,6 +128,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
       answer?: string | null;
       flagged?: boolean;
       timeRemaining?: number;
+      highlights?: Highlight[];
     }) => {
       if (!currentModule) return;
       try {
@@ -133,6 +144,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
     [currentModule, session.id]
   );
 
+  // Periodic time autosave
   useEffect(() => {
     const id = setInterval(() => {
       if (!currentModule) return;
@@ -143,6 +155,22 @@ export function ExamShell({ test, session }: ExamShellProps) {
     }, 30_000);
     return () => clearInterval(id);
   }, [currentModule, timeRemaining, saveModule]);
+
+  // Debounced highlight autosave — save 1s after last change per question
+  const highlightSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const handleHighlightsChange = (next: Highlight[]) => {
+    if (!currentQuestion) return;
+    const qid = currentQuestion.id;
+    setHighlights((prev) => ({ ...prev, [qid]: next }));
+
+    const existing = highlightSaveTimers.current[qid];
+    if (existing) clearTimeout(existing);
+
+    highlightSaveTimers.current[qid] = setTimeout(() => {
+      void saveModule({ questionId: qid, highlights: next });
+    }, 1000);
+  };
 
   const handleAnswer = (value: string | null) => {
     if (!currentModule || !currentQuestion) return;
@@ -173,11 +201,6 @@ export function ExamShell({ test, session }: ExamShellProps) {
       };
     });
     void saveModule({ questionId: currentQuestion.id, flagged: nowFlagged });
-  };
-
-  const handleHighlightsChange = (next: Highlight[]) => {
-    if (!currentQuestion) return;
-    setHighlights((prev) => ({ ...prev, [currentQuestion.id]: next }));
   };
 
   const handleToggleStrike = (choiceId: string) => {
@@ -228,11 +251,13 @@ export function ExamShell({ test, session }: ExamShellProps) {
         (m) => m.id === json.data.nextModuleId
       );
       if (nextIdx < 0) throw new Error('Next module not found');
+
       const nextModule = test.modules[nextIdx];
       const isSectionBreak = nextModule.subject !== currentModule.subject;
       const breakSeconds = isSectionBreak
         ? (currentModule.breakAfterSeconds ?? 600)
         : 0;
+
       setBreakState({
         nextModuleIndex: nextIdx,
         isFinal: false,
@@ -245,14 +270,15 @@ export function ExamShell({ test, session }: ExamShellProps) {
     }
   };
 
-  const beginNextModule = () => {
+  const beginNextModule = useCallback(() => {
     if (!breakState) return;
     setCurrentModuleIndex(breakState.nextModuleIndex);
     setCurrentQuestionIndex(0);
     setCalculatorOpen(false);
+    setReferenceOpen(false);
     setNavigatorOpen(false);
     setBreakState(null);
-  };
+  }, [breakState]);
 
   if (breakState) {
     const nextModule = test.modules[breakState.nextModuleIndex];
@@ -277,6 +303,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
   const secondsRemaining =
     timeRemaining[currentModule.id] ?? currentModule.timeLimitSeconds;
   const showCalculator = currentModule.subject === 'math';
+  const showReference = currentModule.subject === 'math';
 
   return (
     <div className="flex min-h-screen flex-col bg-app-bg">
@@ -290,7 +317,10 @@ export function ExamShell({ test, session }: ExamShellProps) {
         onToggleFlag={handleToggleFlag}
         calculatorOpen={calculatorOpen}
         onToggleCalculator={() => setCalculatorOpen((v) => !v)}
+        referenceOpen={referenceOpen}
+        onToggleReference={() => setReferenceOpen((v) => !v)}
         showCalculator={showCalculator}
+        showReference={showReference}
         onOpenNavigator={() => setNavigatorOpen(true)}
       />
 
@@ -305,12 +335,10 @@ export function ExamShell({ test, session }: ExamShellProps) {
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6 lg:px-6">
         <main className="min-w-0 flex-1">
           {currentQuestion ? (
-            <div className="rounded-xl border border-border-subtle bg-surface p-6 shadow-card lg:p-8">
-              {/* Question number label */}
-              <div className="mb-5 flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-                  Question {currentQuestionIndex + 1}{' '}
-                  <span className="font-normal">of {currentModule.questions.length}</span>
+            <div className="rounded-lg border border-border-subtle bg-surface p-6 shadow-card lg:p-8">
+              <div className="mb-6 flex items-center justify-between text-sm text-text-muted">
+                <span>
+                  Question {currentQuestionIndex + 1} of {currentModule.questions.length}
                 </span>
               </div>
               <QuestionDisplay
@@ -327,8 +355,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
             <p className="text-text-muted">No questions in this module.</p>
           )}
 
-          {/* Navigation row */}
-          <div className="mt-5 flex items-center justify-between gap-3">
+          <div className="mt-6 flex items-center justify-between gap-3">
             <Button
               variant="secondary"
               onClick={() => setCurrentQuestionIndex((i) => Math.max(0, i - 1))}
@@ -355,12 +382,9 @@ export function ExamShell({ test, session }: ExamShellProps) {
           </div>
         </main>
 
-        {/* Right sidebar — question navigator */}
         <aside className="hidden w-64 flex-shrink-0 lg:block">
-          <div className="sticky top-20 rounded-xl border border-border-subtle bg-surface p-4 shadow-card">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
-              Questions
-            </h3>
+          <div className="sticky top-20 rounded-lg border border-border-subtle bg-surface p-4 shadow-card">
+            <h3 className="mb-3 text-sm font-semibold text-text-primary">Questions</h3>
             <QuestionNavigator
               questions={currentModule.questions}
               answers={moduleAnswerMap}
@@ -372,7 +396,6 @@ export function ExamShell({ test, session }: ExamShellProps) {
         </aside>
       </div>
 
-      {/* Mobile navigator drawer */}
       {navigatorOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <div
@@ -386,7 +409,7 @@ export function ExamShell({ test, session }: ExamShellProps) {
               <button
                 type="button"
                 onClick={() => setNavigatorOpen(false)}
-                className="rounded-md p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
+                className="rounded p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
                 aria-label="Close navigator"
               >
                 ✕
@@ -412,6 +435,12 @@ export function ExamShell({ test, session }: ExamShellProps) {
           onClose={() => setCalculatorOpen(false)}
         />
       )}
+
+      <MathReferenceSheet
+        open={referenceOpen}
+        onClose={() => setReferenceOpen(false)}
+        imageUrl={referenceSheetImage}
+      />
 
       <ConfirmSubmitDialog
         open={confirmOpen}

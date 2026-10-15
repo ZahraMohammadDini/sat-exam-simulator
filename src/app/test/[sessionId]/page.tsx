@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { serializePublicQuestion } from '@/lib/serialize';
 import { ExamShell } from '@/components/exam/ExamShell';
+import type { Highlight } from '@/lib/highlight-store';
 import type {
   TestStructure,
   SessionState,
@@ -56,6 +57,7 @@ export default async function TestPage({ params }: PageProps) {
       moduleNumber: m.moduleNumber,
       difficulty: m.difficulty as ModuleDifficulty,
       timeLimitSeconds: m.timeLimitSeconds,
+      breakAfterSeconds: m.breakAfterSeconds,
       order: m.order,
       questions: m.questions.map((tmq) => serializePublicQuestion(tmq.question)),
     })),
@@ -72,5 +74,15 @@ export default async function TestPage({ params }: PageProps) {
     isPreview: session.isPreview,
   };
 
-  return <ExamShell test={test} session={sessionState} />;
+  const initialHighlights =
+    (session.highlights as unknown as Record<string, Highlight[]>) ?? {};
+
+  return (
+    <ExamShell
+      test={test}
+      session={sessionState}
+      initialHighlights={initialHighlights}
+      referenceSheetImage={session.test.referenceSheetImage}
+    />
+  );
 }

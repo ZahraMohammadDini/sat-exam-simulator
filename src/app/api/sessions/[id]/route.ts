@@ -4,6 +4,7 @@ import { autosaveSchema, formatZodError } from '@/lib/validation';
 import { readModuleState, writeModuleState } from '@/lib/serialize';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function PUT(
   request: Request,
@@ -26,11 +27,18 @@ export async function PUT(
     );
   }
 
-  const { moduleId, questionId, answer, flagged, timeRemaining } = parsed.data;
+  const { moduleId, questionId, answer, flagged, timeRemaining, highlights } =
+    parsed.data;
 
   const session = await prisma.testSession.findUnique({
     where: { id: sessionId },
-    select: { id: true, status: true, answers: true, timeRemaining: true },
+    select: {
+      id: true,
+      status: true,
+      answers: true,
+      timeRemaining: true,
+      highlights: true,
+    },
   });
 
   if (!session) {
@@ -69,11 +77,21 @@ export async function PUT(
     nextTime[moduleId] = timeRemaining;
   }
 
+  // Highlights keyed by questionId
+  const nextHighlights: Record<string, unknown> =
+    session.highlights != null && typeof session.highlights === 'object'
+      ? { ...(session.highlights as unknown as Record<string, unknown>) }
+      : {};
+  if (questionId != null && highlights !== undefined) {
+    nextHighlights[questionId] = highlights;
+  }
+
   await prisma.testSession.update({
     where: { id: sessionId },
     data: {
       answers: nextAnswers as object,
       timeRemaining: nextTime as object,
+      highlights: nextHighlights as object,
     },
   });
 

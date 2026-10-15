@@ -151,6 +151,7 @@ export const testInputSchema = z.object({
   allowReview: z.boolean().default(true),
   showExplanations: z.boolean().default(true),
   adaptiveEnabled: z.boolean().default(false),
+  referenceSheetImage: z.string().url().optional().nullable(),
 });
 
 export type TestInput = z.infer<typeof testInputSchema>;
@@ -196,12 +197,22 @@ export const createSessionSchema = z.object({
   testId: cuidSchema,
 });
 
+export const highlightEntrySchema = z.object({
+  id: z.string().min(1).max(40),
+  text: z.string().min(1).max(2000),
+  color: z.enum(['yellow', 'blue', 'pink']),
+  startOffset: z.number().int().min(0),
+  endOffset: z.number().int().min(0),
+  note: z.string().max(2000).optional(),
+});
+
 export const autosaveSchema = z.object({
   moduleId: cuidSchema,
   questionId: cuidSchema.optional(),
   answer: z.string().nullable().optional(),
   flagged: z.boolean().optional(),
   timeRemaining: z.number().int().min(0).optional(),
+  highlights: z.array(highlightEntrySchema).optional(),
 });
 
 export const submitModuleSchema = z.object({
