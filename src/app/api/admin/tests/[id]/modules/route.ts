@@ -45,6 +45,7 @@ export async function POST(
       moduleNumber: data.moduleNumber,
       difficulty: data.difficulty,
       timeLimitSeconds: data.timeLimitSeconds,
+      breakAfterSeconds: data.breakAfterSeconds ?? null,
       order: data.order,
       adaptiveThreshold: data.adaptiveThreshold ?? null,
       routesTo: data.routesTo ?? null,

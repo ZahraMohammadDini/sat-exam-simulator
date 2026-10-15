@@ -40,6 +40,9 @@ export async function PUT(
         ...(data.timeLimitSeconds !== undefined && {
           timeLimitSeconds: data.timeLimitSeconds,
         }),
+        ...(data.breakAfterSeconds !== undefined && {
+          breakAfterSeconds: data.breakAfterSeconds,
+        }),
         ...(data.order !== undefined && { order: data.order }),
         ...(data.adaptiveThreshold !== undefined && {
           adaptiveThreshold: data.adaptiveThreshold,
