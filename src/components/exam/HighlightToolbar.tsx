@@ -8,6 +8,8 @@ export interface HighlightToolbarProps {
   onHighlight: (color: Highlight['color']) => void;
   onNote: () => void;
   onClear: () => void;
+  /** When true, the toolbar never appears (e.g. palette mode is on) */
+  disabled?: boolean;
 }
 
 interface Position {
@@ -15,10 +17,19 @@ interface Position {
   y: number;
 }
 
-export function HighlightToolbar({ onHighlight, onNote, onClear }: HighlightToolbarProps) {
+export function HighlightToolbar({
+  onHighlight,
+  onNote,
+  onClear,
+  disabled = false,
+}: HighlightToolbarProps) {
   const [pos, setPos] = useState<Position | null>(null);
 
   useEffect(() => {
+    if (disabled) {
+      setPos(null);
+      return;
+    }
     const onMouseUp = () => {
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed) {
@@ -39,9 +50,9 @@ export function HighlightToolbar({ onHighlight, onNote, onClear }: HighlightTool
     };
     document.addEventListener('mouseup', onMouseUp);
     return () => document.removeEventListener('mouseup', onMouseUp);
-  }, []);
+  }, [disabled]);
 
-  if (!pos) return null;
+  if (disabled || !pos) return null;
 
   return (
     <div
@@ -59,7 +70,7 @@ export function HighlightToolbar({ onHighlight, onNote, onClear }: HighlightTool
           onHighlight('yellow');
           setPos(null);
         }}
-        className="h-6 w-6 rounded border border-border-subtle transition-colors hover:scale-110"
+        className="h-6 w-6 rounded border border-border-subtle transition-transform hover:scale-110"
         style={{ backgroundColor: '#fef08a' }}
         aria-label="Highlight yellow"
       />
@@ -69,7 +80,7 @@ export function HighlightToolbar({ onHighlight, onNote, onClear }: HighlightTool
           onHighlight('blue');
           setPos(null);
         }}
-        className="h-6 w-6 rounded border border-border-subtle transition-colors hover:scale-110"
+        className="h-6 w-6 rounded border border-border-subtle transition-transform hover:scale-110"
         style={{ backgroundColor: '#bfdbfe' }}
         aria-label="Highlight blue"
       />
@@ -79,7 +90,7 @@ export function HighlightToolbar({ onHighlight, onNote, onClear }: HighlightTool
           onHighlight('pink');
           setPos(null);
         }}
-        className="h-6 w-6 rounded border border-border-subtle transition-colors hover:scale-110"
+        className="h-6 w-6 rounded border border-border-subtle transition-transform hover:scale-110"
         style={{ backgroundColor: '#fbcfe8' }}
         aria-label="Highlight pink"
       />
