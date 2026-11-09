@@ -19,8 +19,9 @@ function normalizeGridIn(raw: string): number | null {
     return num / den;
   }
 
-  const n = parseFloat(s);
-  return Number.isNaN(n) ? null : n;
+  if (!/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(s)) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
 }
 
 export function compareGridIn(student: string | null, correct: string): boolean {

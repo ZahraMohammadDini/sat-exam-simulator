@@ -79,7 +79,7 @@ export function AnswerChoices({
                   className={clsx(
                     'rounded p-1.5 text-xs text-text-muted transition-all',
                     'hover:bg-surface-hover hover:text-text-primary',
-                    isStruck ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    isStruck ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'
                   )}
                   aria-label={isStruck ? 'Remove strikethrough' : 'Strike through choice'}
                   title="Eliminate answer choice"

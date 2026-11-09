@@ -211,7 +211,8 @@ export const autosaveSchema = z.object({
   questionId: cuidSchema.optional(),
   answer: z.string().nullable().optional(),
   flagged: z.boolean().optional(),
-  timeRemaining: z.number().int().min(0).optional(),
+  timeRemaining: z.number().int().min(0).optional(), // legacy clients; server clock is authoritative
+  eliminated: z.array(choiceIdSchema).max(4).optional(),
   highlights: z.array(highlightEntrySchema).optional(),
 });
 
@@ -241,6 +242,7 @@ export const importPayloadSchema = z.object({
     allowReview: z.boolean().default(true),
     showExplanations: z.boolean().default(true),
     adaptiveEnabled: z.boolean().default(false),
+    referenceSheetImage: z.string().url().optional().nullable(),
     modules: z.array(
       z.object({
         subject: subjectSchema,
@@ -251,9 +253,9 @@ export const importPayloadSchema = z.object({
         order: z.number().int(),
         adaptiveThreshold: z.number().int().nullable().optional(),
         routesTo: z.enum(['easy', 'hard']).nullable().optional(),
-        questions: z.array(questionInputSchema),
+        questions: z.array(questionInputSchema).min(1, 'Every imported module needs questions'),
       })
-    ),
+    ).min(1).max(12),
   }),
 });
 

@@ -1,0 +1,472 @@
+{
+  "version": 1,
+  "test": {
+    "title": "Adaptive SAT — DEMO (original questions, not calibrated)",
+    "description": "Import-and-routing demonstration. This is not a full-length SAT; replace with complete 27/22 question modules for realistic practice.",
+    "isPublished": false,
+    "allowReview": true,
+    "showExplanations": true,
+    "adaptiveEnabled": true,
+    "modules": [
+      {
+        "subject": "reading_writing",
+        "moduleNumber": 1,
+        "difficulty": "standard",
+        "timeLimitSeconds": 1920,
+        "breakAfterSeconds": 0,
+        "order": 0,
+        "adaptiveThreshold": 2,
+        "questions": [
+          {
+            "subject": "reading_writing",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "Which choice best states the main idea?",
+            "correctAnswer": "B",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "passage": "After adding a digital lab, the town library hosted workshops and attracted visitors who had rarely borrowed books.",
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "Libraries have become less useful."
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "A town library expanded its services."
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "All books should be digital."
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "Local events must be free."
+              }
+            ]
+          },
+          {
+            "subject": "reading_writing",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "Which word best completes the sentence?",
+            "correctAnswer": "B",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "passage": "The soil was very dry, ___ the garden needed additional water.",
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "although"
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "because"
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "unless"
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "despite"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "subject": "reading_writing",
+        "moduleNumber": 2,
+        "difficulty": "easy",
+        "timeLimitSeconds": 1920,
+        "breakAfterSeconds": 600,
+        "order": 1,
+        "adaptiveThreshold": null,
+        "questions": [
+          {
+            "subject": "reading_writing",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "The word \"brief\" most nearly means",
+            "correctAnswer": "B",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "long"
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "short"
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "difficult"
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "formal"
+              }
+            ]
+          },
+          {
+            "subject": "reading_writing",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "Which statement is supported by the passage?",
+            "correctAnswer": "B",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "passage": "Last spring, volunteers built a new walking path through the city park.",
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "The park closed."
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "The park added a path."
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "Trees were removed."
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "A storm caused flooding."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "subject": "reading_writing",
+        "moduleNumber": 2,
+        "difficulty": "hard",
+        "timeLimitSeconds": 1920,
+        "breakAfterSeconds": 600,
+        "order": 2,
+        "adaptiveThreshold": null,
+        "questions": [
+          {
+            "subject": "reading_writing",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "What can reasonably be inferred?",
+            "correctAnswer": "B",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "passage": "The first survey drew mostly commuters. Organizers later distributed forms to people who worked from home and to retirees.",
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "The survey was entirely inaccurate."
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "Early responses may not represent all residents."
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "The plan was cancelled."
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "Every resident liked the plan."
+              }
+            ]
+          },
+          {
+            "subject": "reading_writing",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "Which choice best describes the author’s purpose?",
+            "correctAnswer": "B",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "passage": "Researchers expected brighter streets to reduce moth populations. Instead, several species became more common around certain lamps.",
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "To dispute a historical claim"
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "To explain an unexpected observation"
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "To argue against field research"
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "To advertise a product"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "subject": "math",
+        "moduleNumber": 1,
+        "difficulty": "standard",
+        "timeLimitSeconds": 2100,
+        "breakAfterSeconds": 0,
+        "order": 3,
+        "adaptiveThreshold": 2,
+        "questions": [
+          {
+            "subject": "math",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "If $3x + 5 = 20$, what is $x$?",
+            "correctAnswer": "C",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "3"
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "4"
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "5"
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "6"
+              }
+            ]
+          },
+          {
+            "subject": "math",
+            "type": "grid_in",
+            "difficulty": "medium",
+            "stem": "What is the value of $x$ if $2x=14$?",
+            "correctAnswer": "7",
+            "explanation": "Solve and simplify the expression.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ]
+          }
+        ]
+      },
+      {
+        "subject": "math",
+        "moduleNumber": 2,
+        "difficulty": "easy",
+        "timeLimitSeconds": 2100,
+        "breakAfterSeconds": 0,
+        "order": 4,
+        "adaptiveThreshold": null,
+        "questions": [
+          {
+            "subject": "math",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "What is $8 + 9$?",
+            "correctAnswer": "C",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "15"
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "16"
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "17"
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "18"
+              }
+            ]
+          },
+          {
+            "subject": "math",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "A rectangle has sides 3 and 4. What is its area?",
+            "correctAnswer": "C",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "7"
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "10"
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "12"
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "14"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "subject": "math",
+        "moduleNumber": 2,
+        "difficulty": "hard",
+        "timeLimitSeconds": 2100,
+        "breakAfterSeconds": 0,
+        "order": 5,
+        "adaptiveThreshold": null,
+        "questions": [
+          {
+            "subject": "math",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": "If $f(x)=x^2-3x$, what is $f(5)$?",
+            "correctAnswer": "B",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "5"
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "10"
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "15"
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "20"
+              }
+            ]
+          },
+          {
+            "subject": "math",
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "stem": null,
+            "correctAnswer": "A",
+            "explanation": "Review the definition and check each choice.",
+            "isPublished": true,
+            "tags": [
+              "demo"
+            ],
+            "choices": [
+              {
+                "id": "A",
+                "mode": "text",
+                "text": "A linear trend"
+              },
+              {
+                "id": "B",
+                "mode": "text",
+                "text": "A quadratic trend"
+              },
+              {
+                "id": "C",
+                "mode": "text",
+                "text": "No change"
+              },
+              {
+                "id": "D",
+                "mode": "text",
+                "text": "A negative slope"
+              }
+            ],
+            "stemIsImage": true,
+            "stemImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaQAAACWCAIAAAAe62twAAAErUlEQVR4nO3dPS9lWxjA8U18B1QqCd1MozUJMREvUfkIIlHrkGhEq/URaLTXS3IV6plvIAoRPaJzC4k7Xsbm2Gftvdfz+0V5kvVU/7PWkn12z8PDQwGQu966BwBIQeyAEMQOCEHsgBDEDghB7IAQxA4IQeyAEMQOCEHsgBDEDghB7IAQxA4IoSR28/PzFxcXRVHc3NxMTk76iRSgpUpiNzc3d3R0VBTF6enp1NRUT09Pkqme+fFz8fEv/dJANkpiNzs7e3JyUhTF8fHx3NxckpEAqlcSu8HBwd7e3uvr68vLy9HR0TQzAVSu/B8UMzMzW1tb4+PjCaYB6JLy2E1PTx8eHs7OziaYBmiC74u/6x6hen2ln7i/vx8bGxsaGkowDVCjLBv3pCR2JycnOzs729vbaaYB0nuzcd8Xf//a+5Z6lG4qid3ExMTExESaUYDE8t7KvVB+jAUy837jMtvQPRE7iCJm456IHWSu9KyafeYeiR3kSeNeEDvITfDj6t+IHWRC494ndtBuGvdBYget5Erus8QO2kTjOiZ20A6Oq18kdtBoGlcVsYMm0rjKiR00iCu57hE7qJ/GJSB2UCfH1WTEDmqgcemJHaSjcTUSO+g6V3JNIHbQLRrXKGIH1XNcbSCxg8poXJOJHXyVxrWC2EGHXMm1i9jBJ3zkRasa10xiB+U0LgNiB28TuMyIHTyjcbkSOxC4EMSOuDQuFLEjFoELS+wIQeMQO7IlcPxJ7MiNxvEmsSMHAkcpsaPFNI6PEztaRuDojNjRDhrHF4kdzSVwVEjsaByNoxvEjkYQOLpN7KiTxpGM2JGawFELsSMRjaNeYkd3eSsNDSF2dIsXDNIoYkfFNI5mEjuqoXE0nNjxJa7kaAuxoxMaR+uIHZ/juEpLiR0fonG0ndjxHo0jG2LHG1zJkR+x438aR8bEjqJwXCUAsQtN44hD7CLSOAISu0BcyRGZ2OVP46AQu7w5rsITscuQxsFrYpcPjYN3iF3ruZKDjxC7ttI4+BSxax/HVeiA2LWGxsFXiF3TaRxUQuwaypUcVEvsGqQ0cIXGQafErn4aBwmIXT0EDhITu6Q0Duoidl0ncNAEYtctGgeNInZVEjhoLLGrgMZB84ldhwQO2kXsPkfjoKXErpzAQQbE7q80DnIids8IHORK7IpC4yCAuLETOAglXOw0DmIKETuBA3KOncYBT3KLncABb8otdu/QOIgst9j92vv25+ZO4IBHucXukcYBL/TWPUD1lA54LcPYAbwmdkAIYgeEIHZACGIHhCB2QAhiB4QgdkAIYgeEIHZACG16NvbHz8W6RwAq8O8/e+kXtbMDQmhB7Gr5EgAy0/Pw8FD3DABd14KdHcDXiR0QgtgBIYgdEILYASGIHRCC2AFJraysHB0dFUWxtrZ2cHCQbN02PS4GZGB9fX1paam/v//q6mphYSHZumIHJDUwMLCwsLC8vLy3l/ThKMdYILW7u7u+vr7b29uUi4odkNT5+fnZ2dnu7u7m5mbKx1XFDkhqY2NjdXV1ZGRkeHh4f38/2bp+CAAIwc4OCEHsgBDEDghB7IAQxA4IQeyAEMQOCEHsgBDEDgjhP2+bgU/mENoaAAAAAElFTkSuQmCC"
+          }
+        ]
+      }
+    ]
+  }
+}

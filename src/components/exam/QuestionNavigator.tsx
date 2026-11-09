@@ -42,7 +42,7 @@ export function QuestionNavigator({
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-5 gap-2 sm:grid-cols-9">
         {questions.map((q, idx) => {
           const answer = answers[q.id];
           const isAnswered = answer != null && answer !== '';
@@ -54,12 +54,12 @@ export function QuestionNavigator({
               type="button"
               onClick={() => onNavigate(idx)}
               className={clsx(
-                'relative flex h-9 items-center justify-center rounded-md border text-xs font-semibold transition-all focus-ring',
+                'relative flex h-10 items-center justify-center rounded-sm border text-sm font-semibold transition-all focus-ring',
                 isCurrent
-                  ? 'border-accent bg-accent text-white shadow-sm'
+                  ? 'border-[#263a91] bg-[#2d55c9] text-white shadow-sm ring-2 ring-[#2d55c9] ring-offset-2'
                   : isAnswered
-                  ? 'border-accent/30 bg-surface-selected text-accent hover:border-accent/50 hover:bg-accent-subtle'
-                  : 'border-border-default bg-surface text-text-muted hover:border-border-default hover:bg-surface-hover hover:text-text-primary'
+                  ? 'border-[#3853a3] bg-[#2d55c9] text-white hover:bg-[#1d3dba]'
+                  : 'border-dashed border-2 border-[#7b8495] bg-white text-[#353944] hover:bg-gray-100'
               )}
               aria-label={`Question ${idx + 1}${isFlagged ? ' (flagged)' : ''}${isAnswered ? ' (answered)' : ''}`}
               aria-current={isCurrent ? 'true' : undefined}
@@ -67,7 +67,7 @@ export function QuestionNavigator({
               {idx + 1}
               {isFlagged && (
                 <span
-                  className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-flag-active ring-2 ring-surface"
+                  className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-sm bg-red-600 ring-2 ring-white"
                   aria-hidden
                 />
               )}

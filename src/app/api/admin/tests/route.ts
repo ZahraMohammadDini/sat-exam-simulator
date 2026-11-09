@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   const passwordHash = await bcrypt.hash(password, 12);
 
   const test = await prisma.test.create({
-    data: { ...rest, passwordHash },
+    data: { ...rest, isPublished: false, passwordHash },
     include: { _count: { select: { modules: true, sessions: true } } },
   });
 

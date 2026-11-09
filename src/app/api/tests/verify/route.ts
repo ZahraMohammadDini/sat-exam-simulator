@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { grantExamAccess } from '@/lib/exam-access';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { getStudentSession } from '@/lib/auth';
@@ -83,11 +84,13 @@ export async function POST(request: Request) {
         answers: {},
         timeRemaining: {},
         routing: [],
+        moduleStartedAt: new Date(),
         isPreview: false,
       },
       select: { id: true },
     });
 
+    await grantExamAccess(session.id);
     return NextResponse.json({ ok: true, data: { sessionId: session.id } });
   } catch (err) {
     console.error('[tests/verify]', err);

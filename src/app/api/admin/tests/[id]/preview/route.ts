@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { grantExamAccess } from '@/lib/exam-access';
 import { prisma } from '@/lib/db';
 import { requireAdmin, unauthorized } from '@/lib/auth';
 
@@ -27,6 +28,7 @@ export async function POST(
       answers: {},
       timeRemaining: {},
       routing: [],
+        moduleStartedAt: new Date(),
       isPreview: true,
     },
     select: { id: true },

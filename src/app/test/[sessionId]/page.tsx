@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { canAccessExam } from '@/lib/exam-access';
 import { serializePublicQuestion } from '@/lib/serialize';
 import { ExamShell } from '@/components/exam/ExamShell';
 import type { Highlight } from '@/lib/highlight-store';
@@ -40,6 +41,7 @@ export default async function TestPage({ params }: PageProps) {
   });
 
   if (!session) notFound();
+  if (!(await canAccessExam(session))) notFound();
   if (session.status === 'completed') {
     redirect(`/results/${session.id}`);
   }
@@ -59,7 +61,9 @@ export default async function TestPage({ params }: PageProps) {
       timeLimitSeconds: m.timeLimitSeconds,
       breakAfterSeconds: m.breakAfterSeconds,
       order: m.order,
-      questions: m.questions.map((tmq) => serializePublicQuestion(tmq.question)),
+      // Only the currently routed question bank is exposed to the browser.
+      questions: m.id === session.test.modules[session.currentModuleIndex]?.id
+        ? m.questions.map((tmq) => serializePublicQuestion(tmq.question)) : [],
     })),
   };
 
@@ -72,6 +76,9 @@ export default async function TestPage({ params }: PageProps) {
     routing: (session.routing as unknown as RoutingEntry[]) ?? [],
     status: 'active',
     isPreview: session.isPreview,
+    moduleStartedAt: session.moduleStartedAt?.toISOString() ?? null,
+    breakEndsAt: session.breakEndsAt?.toISOString() ?? null,
+    strikethrough: (session.strikethrough as Record<string, string[]>) ?? {},
   };
 
   const initialHighlights =

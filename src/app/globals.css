@@ -92,3 +92,20 @@ mark[data-highlight-id] {
   outline: none;
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
 }
+
+/* Practice exam: full-viewport Bluebook-inspired student layout. */
+.exam-tool-button { display: flex; min-width: 42px; flex-direction: column; align-items: center; gap: 1px; border-radius: 7px; padding: 4px; font-size: 10px; font-weight: 650; }
+.exam-tool-button:hover, .exam-tool-button:focus-visible { background: #dfe5f4; }
+.exam-nav-button { border-radius: 999px; background: #2855ce; padding: 11px 21px; color: white; font-size: 14px; font-weight: 750; white-space: nowrap; }
+.exam-nav-button:hover { filter: brightness(.92); }
+.line-reader-mode { position: relative; --reader-y: 180px; }
+.line-reader-mode::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+  background: linear-gradient(to bottom,
+    rgba(255,255,255,.72) 0,
+    rgba(255,255,255,.72) calc(var(--reader-y) - 21px),
+    transparent calc(var(--reader-y) - 20px),
+    transparent calc(var(--reader-y) + 20px),
+    rgba(255,255,255,.72) calc(var(--reader-y) + 21px));
+}
+@media(max-width: 550px) { .exam-tool-button span:last-child { display: none; } .exam-nav-button { padding: 10px 14px; } }

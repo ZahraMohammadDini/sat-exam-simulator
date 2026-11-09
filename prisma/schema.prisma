@@ -142,6 +142,9 @@ model TestSession {
   timeRemaining      Json      @default("{}")
   routing            Json      @default("[]")
   highlights         Json      @default("{}")
+  strikethrough      Json      @default("{}")
+  moduleStartedAt    DateTime?
+  breakEndsAt        DateTime?
   results            Json?
   status             String    @default("active")
   isPreview          Boolean   @default(false)

@@ -38,6 +38,7 @@ export async function POST(
         allowReview: source.allowReview,
         showExplanations: source.showExplanations,
         adaptiveEnabled: source.adaptiveEnabled,
+        referenceSheetImage: source.referenceSheetImage,
       },
     });
 
@@ -49,6 +50,7 @@ export async function POST(
           moduleNumber: mod.moduleNumber,
           difficulty: mod.difficulty,
           timeLimitSeconds: mod.timeLimitSeconds,
+          breakAfterSeconds: mod.breakAfterSeconds,
           order: mod.order,
           adaptiveThreshold: mod.adaptiveThreshold,
           routesTo: mod.routesTo,

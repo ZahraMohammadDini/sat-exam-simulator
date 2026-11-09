@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { canAccessExam } from '@/lib/exam-access';
 import { ResultsContent } from '@/components/results/ResultsContent';
 import type {
   Results,
@@ -57,6 +58,7 @@ export default async function ResultsPage({ params }: PageProps) {
   });
 
   if (!session) notFound();
+  if (!(await canAccessExam(session))) notFound();
   if (session.status !== 'completed') {
     redirect(`/test/${session.id}`);
   }
@@ -64,9 +66,9 @@ export default async function ResultsPage({ params }: PageProps) {
   const stored = session.results as unknown as StoredResults | null;
   if (!stored) notFound();
 
-  const questionIds = stored.modules.flatMap((m) =>
+  const questionIds = session.test.allowReview ? stored.modules.flatMap((m) =>
     m.questions.map((q) => q.questionId)
-  );
+  ) : [];
 
   const questionRows = await prisma.question.findMany({
     where: { id: { in: questionIds } },
@@ -92,7 +94,7 @@ export default async function ResultsPage({ params }: PageProps) {
   const byId = new Map(questionRows.map((q) => [q.id, q]));
 
   const modules: ModuleResult[] = stored.modules.map((m) => {
-    const questions: QuestionResult[] = m.questions.map((q) => {
+    const questions: QuestionResult[] = (session.test.allowReview ? m.questions : []).map((q) => {
       const row = byId.get(q.questionId);
       const choiceList = Array.isArray(row?.choices)
         ? (row?.choices as unknown as Choice[])
@@ -120,11 +122,11 @@ export default async function ResultsPage({ params }: PageProps) {
         questionId: q.questionId,
         question: pub,
         studentAnswer: q.studentAnswer,
-        correctAnswer: q.correctAnswer,
+        correctAnswer: session.test.allowReview ? q.correctAnswer : '',
         isCorrect: q.isCorrect,
-        explanation: row?.explanation ?? null,
-        explanationImage: row?.explanationImage ?? null,
-        explanationIsImage: row?.explanationIsImage ?? false,
+        explanation: session.test.allowReview && session.test.showExplanations ? (row?.explanation ?? null) : null,
+        explanationImage: session.test.allowReview && session.test.showExplanations ? (row?.explanationImage ?? null) : null,
+        explanationIsImage: session.test.allowReview && session.test.showExplanations ? (row?.explanationIsImage ?? false) : false,
       };
     });
 

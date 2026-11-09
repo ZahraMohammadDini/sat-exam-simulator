@@ -142,6 +142,9 @@ export interface SessionState {
   routing: RoutingEntry[];
   status: SessionStatus;
   isPreview: boolean;
+  moduleStartedAt?: string | null;
+  breakEndsAt?: string | null;
+  strikethrough?: Record<string, string[]>;
 }
 
 // ── Results types ────────────────────────────────────────────────

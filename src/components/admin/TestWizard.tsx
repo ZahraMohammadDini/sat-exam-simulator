@@ -11,7 +11,7 @@ export function TestWizard() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [password, setPassword] = useState('');
-  const [isPublished, setIsPublished] = useState(false);
+  const [isPublished] = useState(false);
   const [allowReview, setAllowReview] = useState(true);
   const [showExplanations, setShowExplanations] = useState(true);
   const [adaptiveEnabled, setAdaptiveEnabled] = useState(false);
@@ -87,12 +87,7 @@ export function TestWizard() {
       <div className="space-y-3 rounded-lg border border-border-default bg-surface p-6 shadow-card">
         <h2 className="text-base font-semibold">Options</h2>
 
-        <Toggle
-          label="Publish immediately"
-          description="Unpublished tests are hidden from students."
-          checked={isPublished}
-          onChange={setIsPublished}
-        />
+        <p className="rounded-md bg-surface-alt p-3 text-sm text-text-secondary">New tests start as drafts. Add all modules and questions, then publish from the test editor.</p>
         <Toggle
           label="Allow per-question review"
           description="Students can see which questions they got right after submitting."

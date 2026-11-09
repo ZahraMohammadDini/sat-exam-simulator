@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { requireAdmin, unauthorized } from '@/lib/auth';
 import { testInputSchema, formatZodError } from '@/lib/validation';
+import { validateAdaptiveModules } from '@/lib/exam-routing';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -56,6 +57,16 @@ export async function PUT(
       { ok: false, error: formatZodError(parsed.error) },
       { status: 400 }
     );
+  }
+
+  if (parsed.data.isPublished || parsed.data.adaptiveEnabled) {
+    const existing = await prisma.test.findUnique({ where: { id: params.id }, include: {
+      modules: { include: { questions: { select: { questionId: true } } } },
+    } });
+    if (!existing) return NextResponse.json({ ok: false, error: 'Test not found' }, { status: 404 });
+    const issues = validateAdaptiveModules(existing.modules, parsed.data.adaptiveEnabled ?? existing.adaptiveEnabled);
+    if (parsed.data.isPublished && existing.modules.some(m => m.questions.length === 0)) issues.push('Every module must contain questions');
+    if (issues.length) return NextResponse.json({ ok: false, error: issues.join('; ') }, { status: 400 });
   }
 
   const { password, ...rest } = parsed.data;

@@ -1,78 +1,30 @@
 'use client';
-
 import { useEffect, useState } from 'react';
-import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
-
+import { formatTime } from './ExamTimer';
 export interface SectionBreakProps {
   nextModuleTitle: string;
   onStart: () => void;
-  isFinal?: boolean;
-  /** When > 0, show a countdown for this many seconds */
   breakSeconds?: number;
+  breakEndsAt?: string | null;
+  busy?: boolean;
+  error?: string | null;
+  isFinal?: boolean;
 }
-
-function formatCountdown(total: number): string {
-  const s = Math.max(0, Math.floor(total));
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${m}:${String(sec).padStart(2, '0')}`;
-}
-
-export function SectionBreak({
-  nextModuleTitle,
-  onStart,
-  isFinal,
-  breakSeconds = 0,
-}: SectionBreakProps) {
-  const [remaining, setRemaining] = useState(breakSeconds);
-  const showCountdown = breakSeconds > 0;
-
+export function SectionBreak({ nextModuleTitle, onStart, breakSeconds = 0, breakEndsAt, busy, error }: SectionBreakProps) {
+  const [remaining, setRemaining] = useState(() => breakEndsAt ? Math.max(0, Math.ceil((new Date(breakEndsAt).getTime() - Date.now()) / 1000)) : breakSeconds);
   useEffect(() => {
-    if (!showCountdown) return;
-    const id = setInterval(() => {
-      setRemaining((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [showCountdown]);
-
-  // Auto-advance when countdown hits zero
-  useEffect(() => {
-    if (showCountdown && remaining === 0) {
-      onStart();
-    }
-  }, [remaining, showCountdown, onStart]);
-
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center bg-app-bg p-6">
-      <div className="max-w-md rounded-lg border border-border-subtle bg-surface p-10 text-center shadow-card">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-subtle text-accent">
-          <span className="text-xl" aria-hidden>✓</span>
-        </div>
-        <h2 className="text-xl font-bold text-text-primary">
-          {isFinal ? 'All modules complete' : showCountdown ? 'Break time' : 'Section complete'}
-        </h2>
-        <p className="mt-3 text-sm text-text-secondary">
-          {isFinal
-            ? 'You have finished all modules. Continue to see your results.'
-            : showCountdown
-            ? `Take a break. Next up: ${nextModuleTitle}.`
-            : `Next up: ${nextModuleTitle}. The timer will start when you begin.`}
-        </p>
-
-        {showCountdown && (
-          <div className="my-6">
-            <div className="font-timer text-4xl font-bold tabular-nums text-text-primary">
-              {formatCountdown(remaining)}
-            </div>
-            <p className="mt-1 text-xs text-text-muted">time remaining</p>
-          </div>
-        )}
-
-        <Button size="lg" className="mt-6" onClick={onStart}>
-          {isFinal ? 'View results' : showCountdown ? 'Skip break and continue' : 'Start next module'}
-        </Button>
-      </div>
-    </div>
-  );
+    if (!breakEndsAt) return;
+    const tick = () => setRemaining(Math.max(0, Math.ceil((new Date(breakEndsAt).getTime() - Date.now()) / 1000)));
+    tick(); const id = setInterval(tick, 500); return () => clearInterval(id);
+  }, [breakEndsAt]);
+  return <div className="flex min-h-screen items-center justify-center bg-[#f1f3f9] p-6"><section className="w-full max-w-xl rounded-xl border border-gray-300 bg-white p-10 text-center shadow-sm">
+    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#e8ecff] text-3xl text-[#294bc5]">✓</div>
+    <h1 className="mb-3 text-2xl font-extrabold text-[#282c38]">{remaining > 0 ? 'Take a break' : 'Ready for the next module?'}</h1>
+    <p className="text-gray-600">The previous module is locked. Next: <strong>{nextModuleTitle}</strong>.</p>
+    {remaining > 0 && <div className="my-8 text-5xl font-bold tabular-nums">{formatTime(remaining)}</div>}
+    <p className="mt-3 text-sm text-gray-500">Your next module timer starts only when you continue.</p>
+    {error && <p role="alert" className="mt-4 text-red-700">{error}</p>}
+    <Button className="mt-7" onClick={onStart} disabled={busy}>{busy ? 'Starting…' : remaining ? 'Skip break and continue' : 'Start next module'}</Button>
+  </section></div>;
 }

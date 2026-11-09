@@ -31,8 +31,8 @@ export function QuestionDisplay({
 }: QuestionDisplayProps) {
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-      {question.passage && (
-        <div className="lg:w-1/2 lg:flex-shrink-0">
+      {(question.passage || question.passageImage) && (
+        <div className="min-w-0 border-b border-dashed border-gray-300 pb-5 lg:w-1/2 lg:flex-shrink-0 lg:border-b-0 lg:border-r lg:pr-7">
           <PassagePanel
             question={question}
             highlights={highlights}
@@ -40,7 +40,7 @@ export function QuestionDisplay({
           />
         </div>
       )}
-      <div className="flex-1 space-y-6">
+      <div className="min-w-0 flex-1 space-y-6">
         <div className="question-stem">
           {question.stemIsImage && question.stemImage ? (
             <ZoomableImage

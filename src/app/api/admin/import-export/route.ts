@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { requireAdmin, unauthorized } from '@/lib/auth';
 import { importPayloadSchema, formatZodError } from '@/lib/validation';
 import { jsonOrDbNull } from '@/lib/serialize';
+import { validateAdaptiveModules } from '@/lib/exam-routing';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,11 +51,13 @@ export async function GET(request: Request) {
       allowReview: test.allowReview,
       showExplanations: test.showExplanations,
       adaptiveEnabled: test.adaptiveEnabled,
+      referenceSheetImage: test.referenceSheetImage,
       modules: test.modules.map((m) => ({
         subject: m.subject,
         moduleNumber: m.moduleNumber,
         difficulty: m.difficulty,
         timeLimitSeconds: m.timeLimitSeconds,
+        breakAfterSeconds: m.breakAfterSeconds,
         order: m.order,
         adaptiveThreshold: m.adaptiveThreshold,
         routesTo: m.routesTo,
@@ -113,6 +116,19 @@ export async function POST(request: Request) {
   }
 
   const { test } = parsed.data;
+  const issues = validateAdaptiveModules(test.modules.map((m, i) => ({
+    id: String(i), subject: m.subject, moduleNumber: m.moduleNumber,
+    difficulty: m.difficulty, order: m.order, adaptiveThreshold: m.adaptiveThreshold,
+  })), test.adaptiveEnabled);
+  for (const [index, module] of test.modules.entries()) {
+    if (module.questions.some(q => q.subject !== module.subject)) issues.push(`module ${index + 1}: question subject mismatch`);
+    if (module.adaptiveThreshold != null && module.adaptiveThreshold > module.questions.length) issues.push(`module ${index + 1}: threshold exceeds question count`);
+  }
+  if (issues.length) return NextResponse.json({ ok: false, error: issues.join('; ') }, { status: 400 });
+  const refs = [test.referenceSheetImage, ...test.modules.flatMap(m => m.questions.flatMap(q => [
+    q.passageImage, q.stemImage, q.explanationImage, ...(q.choices ?? []).filter(c => c.mode === 'image').map(c => c.mode === 'image' ? c.imageUrl : null),
+  ]))].filter((x): x is string => !!x);
+  if (refs.some(x => !/^https:\/\//i.test(x))) return NextResponse.json({ ok: false, error: 'Embedded images must finish uploading before test import' }, { status: 400 });
   const passwordHash = await bcrypt.hash(wrapper.password, 12);
 
   const created = await prisma.$transaction(async (tx) => {
@@ -125,6 +141,7 @@ export async function POST(request: Request) {
         allowReview: test.allowReview,
         showExplanations: test.showExplanations,
         adaptiveEnabled: test.adaptiveEnabled,
+        referenceSheetImage: test.referenceSheetImage ?? null,
       },
     });
 
